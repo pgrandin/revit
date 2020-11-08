@@ -5,7 +5,8 @@ using Autodesk.Revit.UI;
 
 using System.Linq;
 using System.Collections.Generic;
-
+using Newtonsoft.Json;
+using System.IO;
 
 namespace MyRevit
 {
@@ -19,6 +20,24 @@ namespace MyRevit
             return FailureProcessingResult.Continue;
         }
     }
+
+    public class walls
+    {
+        public IList<IList<double>> coords { get; set; }
+    }
+
+    public class mysets
+    {
+        public string type { get; set; }
+        public IList<walls> walls { get; set; }
+    }
+
+    public class mylevels
+    {
+        public string level { get; set; }
+        public IList<mysets> sets { get; set; }
+    }
+
 
     class MyLevel
     {
@@ -61,10 +80,22 @@ namespace MyRevit
 
         public Result add_dimension_from_point(ViewPlan floorView, XYZ pt, XYZ normal, string dimension, XYZ offset)
         {
+            return add_dimension_from_points(floorView, pt, pt, normal, dimension, offset);
+        }
+
+
+        public Result add_dimension_from_points(ViewPlan floorView, XYZ pt1, XYZ pt2, XYZ normal, string dimension, XYZ offset)
+        {
+            return add_dimension_from_points(floorView, pt1, normal, pt2, -normal, dimension, offset);
+        }
+
+        public Result add_dimension_from_points(ViewPlan floorView, XYZ pt1, XYZ normal1, XYZ pt2, XYZ normal2, string dimension, XYZ offset)
+        { 
             Transaction trans = new Transaction(doc);
 
             offset = new XYZ(offset.X / 12.0, offset.Y / 12.0, offset.Z);
-            pt = new XYZ(pt.X / 12, pt.Y / 12, pt.Z);
+            pt1 = new XYZ(pt1.X / 12, pt1.Y / 12, pt1.Z);
+            pt2 = new XYZ(pt2.X / 12, pt2.Y / 12, pt2.Z);
 
             ElementClassFilter filter = new ElementClassFilter(typeof(WallType));
 
@@ -94,8 +125,8 @@ namespace MyRevit
             ReferenceIntersector ri1 = new ReferenceIntersector(intersectFilter, FindReferenceTarget.Face, view);
             ReferenceIntersector ri2 = new ReferenceIntersector(intersectFilter, FindReferenceTarget.Face, view);
 
-            ReferenceWithContext ref1 = ri1.FindNearest(pt, normal);
-            ReferenceWithContext ref2 = ri2.FindNearest(pt, -normal);
+            ReferenceWithContext ref1 = ri1.FindNearest(pt1, normal1);
+            ReferenceWithContext ref2 = ri2.FindNearest(pt2, normal2);
 
             using (trans = new Transaction(doc))
             {
@@ -109,7 +140,7 @@ namespace MyRevit
             ra.Append(ref1.GetReference());
             ra.Append(ref2.GetReference());
 
-            Line line = Line.CreateBound(pt.Add(offset), pt.Add(offset).Add(normal));
+            Line line = Line.CreateBound(pt1.Add(offset), pt1.Add(offset).Add(normal1));
             Dimension dim;
 
             DimensionType dType = null;
@@ -160,7 +191,7 @@ namespace MyRevit
 
             if (vt == ViewType.FloorPlan)
             {
-                vf = ViewFamily.FloorPlan;
+                vf = ViewFamily.StructuralPlan;
             }
             else if (vt == ViewType.CeilingPlan)
             {
@@ -185,7 +216,7 @@ namespace MyRevit
                 trans.Commit();
             }
 
-            if (vf == ViewFamily.FloorPlan)
+            if (vt == ViewType.FloorPlan)
             {
 
                 FilteredElementCollector col_ = new FilteredElementCollector(doc);
@@ -230,10 +261,50 @@ namespace MyRevit
             return view;
         }
 
+        public List<XYZ[]> get_walls_from_file(string type)
+        {
+            string jsonFilePath = @"C:\Users\John\source\repos\revit\data.json";
 
-        public Result insert_exterior_walls(XYZ[][] coords, WallType wType, FloorType floorType)
+            List<mylevels> items;
+            List<XYZ[]> coords = new List<XYZ[]>();
+
+            using (StreamReader r = new StreamReader(jsonFilePath))
+            {
+                string json = r.ReadToEnd();
+                items = JsonConvert.DeserializeObject<List<mylevels>>(json);
+            }
+
+            foreach (mylevels l in items)
+            {
+                if (l.level == level.Name)
+                {
+                    foreach (mysets s in l.sets)
+                    {
+                        if(s.type == type) { 
+                            walls p = null;
+                            foreach (walls w in s.walls)
+                            {
+                                // coords.Add(new XYZ(w.coords[0], w.coords[1], level.Elevation));
+                                XYZ a = w.coords[0] is null ?
+                                    new XYZ(p.coords[1][0] / 12.0, p.coords[1][1] / 12.0, level.Elevation) :
+                                    new XYZ(w.coords[0][0] / 12.0, w.coords[0][1] / 12.0, level.Elevation);
+                                XYZ b = new XYZ(w.coords[1][0] / 12.0, w.coords[1][1] / 12.0, level.Elevation);
+                                XYZ[] w2 = { a, b };
+                                coords.Add(w2);
+                                p = w;
+                            }
+                        }
+                    }
+                }
+            }
+            return coords;
+        }
+
+        public Result insert_exterior_walls(WallType wType, FloorType floorType)
         {
             Transaction trans = new Transaction(doc);
+
+            List<XYZ[]> coords = get_walls_from_file("exterior");
 
             using (trans = new Transaction(doc))
             {
@@ -245,31 +316,18 @@ namespace MyRevit
 
                 CurveArray floor_profile = new CurveArray();    // profile for the floor
 
-                int i = 0;
                 foreach (XYZ[] p in coords)
                 {
                     Line line;
 
-                    line = Line.CreateBound(
-                        (coords[i][0] is null ?
-                            coords[i - 1][1].Divide(12).Add(new XYZ(0, 0, level.Elevation)) :
-                            coords[i][0].Divide(12).Add(new XYZ(0, 0, level.Elevation))
-                        ),
-
-                        coords[i][1].Divide(12).Add(new XYZ(0, 0, level.Elevation))
-                    );
+                    line = Line.CreateBound(p[0], p[1]);
 
                     floor_profile.Append(line);
+
                     joistCurves.Add(Line.CreateBound(
-                        (coords[i][0] is null ?
-                            coords[i - 1][1].Divide(12).Add(new XYZ(0, 0, levels[level_id+1].Elevation - joist_offset)) :
-                            coords[i][0].Divide(12).Add(new XYZ(0, 0, levels[level_id + 1].Elevation - joist_offset))
-                        ),
-
-                        coords[i][1].Divide(12).Add(new XYZ(0, 0, levels[level_id + 1].Elevation - joist_offset)))
-
+                        new XYZ(p[0].X, p[0].Y, levels[level_id + 1].Elevation - joist_offset),
+                        new XYZ(p[1].X, p[1].Y, levels[level_id + 1].Elevation - joist_offset))
                     );
-
                     // Workaround for the lack of ceiling
                     doc.Create.NewDetailCurve(ceilingView, line);
 
@@ -284,19 +342,23 @@ namespace MyRevit
                     {
                         p_.Set(levels[level_id + 1].Id);
                     }
-                    i++;
                 }
 
-                XYZ normal = XYZ.BasisZ;
-                floor = doc.Create.NewFloor(floor_profile, floorType, level, true, normal);
+                if (level_id < 2)
+                {
+                    XYZ normal = XYZ.BasisZ;
+                    floor = doc.Create.NewFloor(floor_profile, floorType, level, true, normal);
+                }
                 trans.Commit();
             }
             return Result.Succeeded;
         }
 
-        public Result insert_inside_walls(XYZ[][] coords)
+        public Result insert_inside_walls()
         {
             Transaction trans = new Transaction(doc);
+
+            List<XYZ[]> coords = get_walls_from_file("interior");
 
             WallType wType = new FilteredElementCollector(doc)
                 .OfClass(typeof(WallType))
@@ -309,17 +371,10 @@ namespace MyRevit
                 trans.Start("Inside walls");
                 SketchPlane sketch = SketchPlane.Create(doc, levels[level_id].Id);
 
-                for (int i = 0; i < coords.Length; i++)
+                foreach (XYZ[] p in coords)
                 {
                     Line line;
-                    line = Line.CreateBound(
-                        (coords[i][0] is null ?
-                            coords[i - 1][1].Divide(12).Add(new XYZ(0, 0, level.Elevation)) :
-                            coords[i][0].Divide(12).Add(new XYZ(0, 0, level.Elevation))
-                        ),
-
-                        coords[i][1].Divide(12).Add(new XYZ(0, 0, level.Elevation))
-                    );
+                    line = Line.CreateBound(p[0], p[1]);
 
                     // Create non structural walls
                     Wall wall = Wall.Create(doc, line as Curve, levels[level_id].Id, false);
@@ -333,7 +388,7 @@ namespace MyRevit
                     p_ = wall.get_Parameter(BuiltInParameter.ALL_MODEL_MARK);
                     if (null != p_)
                     {
-                        p_.Set(levels[level_id].Name + "_inside_" + i.ToString());
+                        p_.Set(levels[level_id].Name + "_inside_");
                     }
                 }
                 trans.Commit();

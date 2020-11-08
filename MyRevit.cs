@@ -11,6 +11,8 @@ namespace MyRevit
 {
     [Transaction(TransactionMode.Manual)]
     [Regeneration(RegenerationOption.Manual)]
+
+
     public class Class1 : IExternalCommand
     {
 
@@ -37,6 +39,7 @@ namespace MyRevit
                     .FirstOrDefault<ViewFamilyType>(a => ViewFamily.Elevation == a.ViewFamily);
 
             XYZ center = new XYZ(60, 10, 0);
+            // FIXME : select the Floor plan/Site view
             View view = doc.ActiveView;
             using (trans = new Transaction(doc))
             {
@@ -74,22 +77,25 @@ namespace MyRevit
                 }
             }
 
-            // The elevation to apply to the new level
+            // FIXME : delete Floor plans/Level 1
+
             using (trans = new Transaction(doc))
             {
                 trans.Start("Basement");
                 Level lvl = Level.Create(doc, -8.5);
-                if (null == lvl)
-                {
-                    throw new Exception("Create a new level failed.");
-                }
-                // Change the level name
                 lvl.Name = "Basement";
-                trans.Commit();
-
                 levels[0] = lvl;
+                trans.Commit();
             }
 
+            using (trans = new Transaction(doc))
+            {
+                trans.Start("Roof");
+                Level lvl = Level.Create(doc, 20);
+                lvl.Name = "Roof";
+                levels[3] = lvl;
+                trans.Commit();
+            }
 
             FilteredElementCollector DimensionTypeCollector = new FilteredElementCollector(doc);
             DimensionTypeCollector.OfClass(typeof(DimensionType));
@@ -265,7 +271,7 @@ namespace MyRevit
             //Get application and document objects
             UIApplication uiapp = commandData.Application;
             Document doc = uiapp.ActiveUIDocument.Document;
-
+                       
             setup_units(doc);
             setup_elevation_markers(doc);
             setup_levels(doc);
@@ -273,8 +279,10 @@ namespace MyRevit
 
             var b = new Basement(doc);
             b.setup();
-            var l = new Level1(doc);
-            l.setup();
+            var l1 = new Level1(doc);
+            l1.setup();
+            var l2 = new Level2(doc);
+            l2.setup();
 
             // uiapp.ActiveUIDocument.RequestViewChange(floorView);
 

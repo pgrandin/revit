@@ -23,18 +23,6 @@ namespace MyRevit
             floorView = setup_view(ViewType.FloorPlan);
             ceilingView = setup_view(ViewType.CeilingPlan);
 
-            // In order to get the proper 'exterior' side we have to draw the walls
-            // clockwise
-            XYZ[][] coords =
-            {
-                    new XYZ[] { new XYZ(0, 0, 0),      new XYZ(0,   368, 0) },
-                    new XYZ[] { new XYZ(0, 368, 0),    new XYZ(330, 368, 0) },
-                    new XYZ[] { new XYZ(330, 368, 0),  new XYZ(330, 313, 0) },
-                    new XYZ[] { new XYZ(330, 313, 0),  new XYZ(468, 313, 0) },
-                    new XYZ[] { new XYZ(468, 313, 0),  new XYZ(468, 0,   0) },
-                    new XYZ[] { new XYZ(468, 0, 0),    new XYZ(0,   0,   0) }
-                };
-
             WallType wType = new FilteredElementCollector(doc)
                 .OfClass(typeof(WallType))
                 .Cast<WallType>().FirstOrDefault(q
@@ -45,7 +33,7 @@ namespace MyRevit
             collector.OfClass(typeof(FloorType));
             FloorType floorType = collector.FirstElement() as FloorType;
 
-            insert_exterior_walls(coords, wType, floorType);
+            insert_exterior_walls(wType, floorType);
 
             // stairs ceiling opening
             XYZ[][] coords2 =
@@ -223,59 +211,7 @@ namespace MyRevit
         public Result setup_inside_walls()
         {
 
-            double position1 = 7.5 + 93.5 + (4.5 / 2);
-
-            XYZ[][] coords =
-            {
-                new XYZ[] {
-                    new XYZ(180, 186, 0),
-                    new XYZ(468, 186, 0),
-                }, new XYZ[] { // Staircase, bottom
-                    new XYZ(180, 143.5, 0),
-                    new XYZ(312, 143.5, 0),
-                }, new XYZ[] { // Staircase, up
-                    null,
-                    new XYZ(312, 186, 0),
-                }, new XYZ[] {
-                    new XYZ(0,   183, 0),
-                    new XYZ(100, 183, 0),
-                },new XYZ[] {
-                    null,
-                    new XYZ(125, 161, 0),
-                },new XYZ[] {
-                    null,
-                    new XYZ(125, position1, 0),
-                },new XYZ[] {
-                    null,
-                    new XYZ(350 -7.5 -(4.5/2), position1 , 0),
-                },new XYZ[] {
-                    null,
-                    new XYZ(365 -7.5 -(4.5/2), position1 + 15, 0),
-                },new XYZ[] {
-                    null,
-                    new XYZ(365 -7.5 -(4.5/2), 186, 0),
-                },new XYZ[] { // Bathroom, left
-                    new XYZ(185.5, 0 , 0),
-                    new XYZ(185.5, position1, 0),
-                },new XYZ[] { // Bathroom, right
-                    new XYZ(297.5, 0 , 0),
-                    new XYZ(297.5, position1, 0),
-                },new XYZ[] { // Cellar
-                    new XYZ(324.75, 313 , 0),
-                    new XYZ(324.75, 186, 0),
-                },new XYZ[] {  // Guest bedroom closet
-                    new XYZ(400, 0 , 0),
-                    new XYZ(400, 58, 0),
-                },new XYZ[] {
-                    null,
-                    new XYZ(430, 80, 0),
-                },new XYZ[] {
-                    null,
-                    new XYZ(468, 80, 0),
-                }
-            };
-
-            insert_inside_walls(coords);
+            insert_inside_walls();
 
             // workshop
             add_dimension_from_point(floorView, new XYZ(50, 50, level.Elevation), new XYZ(0, 1, 0));

@@ -1,7 +1,7 @@
+using System.Collections.Generic;
 using System.Linq;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-
 
 namespace MyRevit
 {
@@ -15,30 +15,11 @@ namespace MyRevit
             this.level = levels[level_id];
         }
 
+
         public Result setup_level()
         {
             floorView = setup_view(ViewType.FloorPlan);
             ceilingView = setup_view(ViewType.CeilingPlan);
-
-            // In order to get the proper 'exterior' side we have to draw the walls
-            // clockwise
-            XYZ[][] coords =
-            {
-                    new XYZ[] { new XYZ(0, 0, 0),  new XYZ(0,   368, 0) },
-                    new XYZ[] { null,              new XYZ(200, 368, 0) },
-                    new XYZ[] { null,              new XYZ(215, 388, 0) },
-                    new XYZ[] { null,              new XYZ(265, 388, 0) },
-                    new XYZ[] { null,              new XYZ(280, 368, 0) },
-                    new XYZ[] { null,              new XYZ(330, 368, 0) },
-                    new XYZ[] { null,              new XYZ(330, 313, 0) },
-                    new XYZ[] { null,              new XYZ(468, 313, 0) },
-                    new XYZ[] { null,              new XYZ(468, 0,   0) },
-                    new XYZ[] { null,              new XYZ(450, 0,   0) },
-                    new XYZ[] { null,              new XYZ(435, -20, 0) },
-                    new XYZ[] { null,              new XYZ(385, -20, 0) },
-                    new XYZ[] { null,              new XYZ(360, 0,   0) },
-                    new XYZ[] { null,              new XYZ(0,   0,   0) },
-                };
 
             WallType wType = new FilteredElementCollector(doc)
                 .OfClass(typeof(WallType))
@@ -51,7 +32,7 @@ namespace MyRevit
                 .Cast<FloorType>().FirstOrDefault(q
                 => q.Name == "Wood Joist 10\" - Wood Finish");
 
-            insert_exterior_walls(coords, wType, floorType);
+            insert_exterior_walls(wType, floorType);
 
             // stairs opening
             XYZ[][] coords2 =
@@ -65,7 +46,7 @@ namespace MyRevit
             Transaction trans = new Transaction(doc);
             using (trans = new Transaction(doc))
             {
-                trans.Start("Basement");
+                trans.Start("Stairs opening");
                 CurveArray floor_opening_profile = new CurveArray();    // profile for the floor
 
                 for (int i = 0; i < coords2.Length; i++)
@@ -91,73 +72,15 @@ namespace MyRevit
 
         public Result setup_inside_walls()
         {
-            XYZ[][] coords =
-            {
-                new XYZ[] {
-                    new XYZ(331, 311, 0),
-                    new XYZ(331, 191, 0),
-                }, new XYZ[] {
-                    null,
-                    new XYZ(164, 191, 0),
-                }, new XYZ[] {
-                    new XYZ(250, 2.5, 0),
-                    new XYZ(250, 65, 0),
-                }, new XYZ[] {
-                    null,
-                    new XYZ(142, 65, 0),
-                }, new XYZ[] {
-                    null,
-                    new XYZ(92, 115, 0),
-                }, new XYZ[] {
-                    null,
-                    new XYZ(92, 170, 0),
-                }, new XYZ[] {
-                    null,
-                    new XYZ(2, 170, 0),
-                }, new XYZ[] { // Playroom south east wall
-                    new XYZ(116, 0, 0),
-                    new XYZ(116, 65, 0),
-                }, new XYZ[] {
-                    null,
-                    new XYZ(132, 72, 0),
-                }, new XYZ[] {  // Toilets
-                    new XYZ(174, 0, 0),
-                    new XYZ(174, 65, 0),
-                }, new XYZ[] { // Pantry
-                    new XYZ(330, 313, 0),
-                    new XYZ(285, 313, 0),
-                }, new XYZ[] {
-                    null,
-                    new XYZ(285, 368, 0),
-                }, new XYZ[] { // Right Column
-                    new XYZ(466, 191.5, 0),
-                    new XYZ(456, 191.5, 0),
-                }, new XYZ[] {
-                    null,
-                    new XYZ(456, 177, 0),
-                }, new XYZ[] {
-                    null,
-                    new XYZ(466, 177, 0),
-                }, new XYZ[] { // Left Column
-                    new XYZ(331, 191.5, 0),
-                    new XYZ(344, 191.5, 0),
-                }, new XYZ[] {
-                    null,
-                    new XYZ(344, 177, 0),
-                }, new XYZ[] {
-                    null,
-                    new XYZ(331, 177, 0),
-                }
-            };
-
-            insert_inside_walls(coords);
+            insert_inside_walls();
 
             // playroom
-            add_dimension_from_point(floorView, new XYZ(20, 50, level.Elevation + 1), new XYZ(0, 1, 0), new XYZ(-60, 0, 0));
-            add_dimension_from_point(floorView, new XYZ(24, 130, level.Elevation + 1), new XYZ(1, 0, 0));
+            add_dimension_from_point(floorView, new XYZ(20, 50, level.Elevation + 1), new XYZ(0, 1, 0), "158\"", new XYZ(-60, 0, 0));
+            add_dimension_from_point(floorView, new XYZ(24, 130, level.Elevation + 1), new XYZ(1, 0, 0), "87 1/2\"");
+            add_dimension_from_point(floorView, new XYZ(50, 20, level.Elevation + 1), new XYZ(1, 0, 0), new XYZ(0, -100, 0));
 
             // family room
-            add_dimension_from_point(floorView, new XYZ(20, 200, level.Elevation + 1), new XYZ(0, 1, 0), new XYZ(-60, 0, 0));
+            add_dimension_from_point(floorView, new XYZ(20, 200, level.Elevation + 1), new XYZ(0, 1, 0), "210\"", new XYZ(-60, 0, 0));
 
             // reading room
             add_dimension_from_point(floorView, new XYZ(362, 20, level.Elevation + 1), new XYZ(1, 0, 0), "213 1/2\"", new XYZ(0, -100, 0));
@@ -170,13 +93,16 @@ namespace MyRevit
             add_dimension_from_point(floorView, new XYZ(140, 20, level.Elevation + 1), new XYZ(1, 0, 0), new XYZ(0, -100, 0));
 
             // dining
-            add_dimension_from_point(floorView, new XYZ(390, 270, level.Elevation + 1), new XYZ(1, 0, 0));
+            add_dimension_from_point(floorView, new XYZ(400, 270, level.Elevation + 1), new XYZ(1, 0, 0), "132\"");
+
             // dining + reading
-            add_dimension_from_point(floorView, new XYZ(460, 20, level.Elevation + 1), new XYZ(0, 1, 0), "172 1/2\"", new XYZ(60, 0, 0));
-            add_dimension_from_point(floorView, new XYZ(460, 250, level.Elevation + 1), new XYZ(0, 1, 0), "124 1/2\"", new XYZ(60, 0, 0));
+            add_dimension_from_point(floorView, new XYZ(465, 20, level.Elevation + 1), new XYZ(0, 1, 0), "172 1/2\"", new XYZ(60, 0, 0));
+            add_dimension_from_point(floorView, new XYZ(465, 250, level.Elevation + 1), new XYZ(0, 1, 0), "124 1/2\"", new XYZ(60, 0, 0));
 
             // kitchen + living room
             add_dimension_from_point(floorView, new XYZ(170, 330, level.Elevation + 1), new XYZ(1, 0, 0), new XYZ(0, 100, 0));
+            add_dimension_from_points(floorView, new XYZ(270, 330, level.Elevation + 1), new XYZ(1, 0, 0), new XYZ(270, 300, level.Elevation + 1), new XYZ(1, 0, 0), "24\"", new XYZ(0, -50, 0));
+
 
             // between columns
             add_dimension_from_point(floorView, new XYZ(400, 185, level.Elevation + 1), new XYZ(1, 0, 0), "107 1/2\"");
@@ -184,12 +110,16 @@ namespace MyRevit
             // hallway to kitchen
             add_dimension_from_point(floorView, new XYZ(170, 129, level.Elevation + 1), new XYZ(1, 0, 0));
 
+            // test
+            add_dimension_from_points(floorView, new XYZ(20, 20, level.Elevation + 1), new XYZ(400, 20, level.Elevation + 1), new XYZ(-1, 0, 0), "472\"", new XYZ(0, -150, 0));
+
+            add_dimension_from_points(floorView, new XYZ(260, 80, level.Elevation + 1), new XYZ(0, -1, 0),  new XYZ(230, 80, level.Elevation + 1), new XYZ(0, -1, 0), "65\"", new XYZ(0, -150, 0));
+
             return Result.Succeeded;
         }
 
         public Result setup()
         {
-            this.level_id = 1;
             setup_level();
             setup_inside_walls();
             return Result.Succeeded;
