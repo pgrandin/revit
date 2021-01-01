@@ -87,7 +87,7 @@ namespace MyRevit
             using (StairsEditScope newStairsScope = new StairsEditScope(doc, "New Stairs"))
             {
 
-                newStairsId = newStairsScope.Start(level.Id, levels[2].Id);
+                newStairsId = newStairsScope.Start(level.Id, level_above.Id);
                 using (Transaction t = new Transaction(doc))
                 {
                     t.Start("Create window");
