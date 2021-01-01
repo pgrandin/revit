@@ -97,7 +97,7 @@
             { "coords": [null, [68.5, -227]]},
             { "coords": [null, [68.5, -208]]},
             { "coords": [null, [0, -208]]},
-            { "coords": [null, [0, 377]]},
+            { "coords": [null, [0, 377]]}
             ]
         },{
             "type": "interior",
@@ -122,7 +122,7 @@
             { "coords": [null, [248.5, -39.5]]},
             { "coords": [[68.5, -207], [68.5, -60]]},
             { "coords": [null, [0, -60]]},
-            { "coords": [[416, 183.5], [416, 136]]},
+            { "coords": [[416, 183.5], [416, 136]]}
             ]
         },{
             "type": "floor",
@@ -148,7 +148,7 @@
             { "coords": [null, [476, 320.5]]},
             { "coords": [null, [330, 320.5]]},
             { "coords": [null, [330, 377]]},
-            { "coords": [null, [176, 377]]},
+            { "coords": [null, [176, 377]]}
             ]
         }]
     },
@@ -163,7 +163,7 @@
             { "coords": [null, [496.5, 340.5]], "define_slope": true},
             { "coords": [null, [496.5, -20]]},
             { "coords": [null, [146, -20]], "define_slope": true},
-            { "coords": [null, [146, 397]]},
+            { "coords": [null, [146, 397]]}
             ]        
          },
          {
@@ -172,7 +172,7 @@
             { "coords": [[268.5, 20], [268.5,  -228]], "define_slope": true},
             { "coords": [null, [-20, -228]]},
             { "coords": [null, [-20, 20]], "define_slope": true},
-            { "coords": [null, [268.5, 20]]},
+            { "coords": [null, [268.5, 20]]}
             ]        
          },
          {
@@ -181,7 +181,7 @@
             { "coords": [[48.5, -228], [268.5,  -228]]},
             { "coords": [null, [268.5, -247]], "define_slope": true},
             { "coords": [null, [48.5, -247]]},
-            { "coords": [null, [48.5, -228]], "define_slope": true},
+            { "coords": [null, [48.5, -228]], "define_slope": true}
             ]        
          },
          {
@@ -191,7 +191,7 @@
             { "coords": [[-20, 397], [164,  397]], "define_slope": true},
             { "coords": [null, [164, -20]]},
             { "coords": [null, [-20, -20]], "define_slope": true, "roof_offset" : 140.0},
-            { "coords": [null, [-20, 397]]},
+            { "coords": [null, [-20, 397]]}
             ]        
          },
          {
@@ -205,7 +205,7 @@
             { "coords": [null, [0, -210.5]]},
             { "coords": [null, [66.5, -210.5]]},
             { "coords": [null, [66.5, -229.5]]},
-            { "coords": [null, [268.5,   -229.5]]},
+            { "coords": [null, [268.5,   -229.5]]}
             ]      
          }
          ]

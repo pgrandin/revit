@@ -112,7 +112,7 @@ namespace MyRevit
                         trans.Commit();
                     }
                 }
-            }            
+            }
             return Result.Succeeded;
         }
 

@@ -1,11 +1,9 @@
-using System;
 
+using System.Collections.Generic;
+using System.Linq;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-
-using System.Linq;
-using System.Collections.Generic;
 
 namespace MyRevit
 {
@@ -23,7 +21,7 @@ namespace MyRevit
               = new FilteredElementCollector(doc)
                 .OfClass(typeof(ElevationMarker));
 
-            while(levels_col.Count() > 0)
+            while (levels_col.Count() > 0)
             {
                 ElevationMarker m = levels_col.Last() as ElevationMarker;
                 using (trans = new Transaction(doc))
@@ -85,7 +83,7 @@ namespace MyRevit
             using (Transaction t = new Transaction(doc))
             {
                 t.Start("Activate door");
-                doc.Regenerate(); 
+                doc.Regenerate();
                 t.Commit();
             }
 
@@ -156,7 +154,7 @@ namespace MyRevit
 
                 trans.Commit();
             }
-             return Result.Succeeded;
+            return Result.Succeeded;
         }
 
         public Result setup_wall_struct(Document doc)
@@ -207,9 +205,9 @@ namespace MyRevit
                 newWallType = wallType.Duplicate("Basement") as WallType;
                 // FIXME : this layer should have the "structural material" parameter set
                 CompoundStructureLayer l1 = new CompoundStructureLayer(8.0 / 12, MaterialFunctionAssignment.Structure, concrete.Id);
-                CompoundStructureLayer newLayer = new CompoundStructureLayer(3.0/12, MaterialFunctionAssignment.Insulation, insulation.Id);
-                CompoundStructureLayer newLayer2 = new CompoundStructureLayer(3.5/12, MaterialFunctionAssignment.Finish1, lumber.Id);
-                CompoundStructureLayer newLayer3 = new CompoundStructureLayer(.5/12, MaterialFunctionAssignment.Finish2, gypsum.Id);
+                CompoundStructureLayer newLayer = new CompoundStructureLayer(3.0 / 12, MaterialFunctionAssignment.Insulation, insulation.Id);
+                CompoundStructureLayer newLayer2 = new CompoundStructureLayer(3.5 / 12, MaterialFunctionAssignment.Finish1, lumber.Id);
+                CompoundStructureLayer newLayer3 = new CompoundStructureLayer(.5 / 12, MaterialFunctionAssignment.Finish2, gypsum.Id);
 
                 CompoundStructure structure = newWallType.GetCompoundStructure();
 
