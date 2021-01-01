@@ -244,7 +244,7 @@ namespace MyRevit
             add_dimension_from_point(floorView, new XYZ(300, 120, level.Elevation), new XYZ(0, 1, 0), "36\"");
 
             return Result.Succeeded;
-         }
+        }
 
         public Result setup_doors()
         {

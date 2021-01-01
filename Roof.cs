@@ -78,14 +78,14 @@ namespace MyRevit
 
                         walls p = null;
                         foreach (walls w in s.walls)
-                        {                                                        
+                        {
                             XYZ a = w.coords[0] is null ?
                                 new XYZ(p.coords[1][0] / 12.0, p.coords[1][1] / 12.0, roof_level.Elevation) :
                                 new XYZ(w.coords[0][0] / 12.0, w.coords[0][1] / 12.0, roof_level.Elevation);
                             XYZ b = new XYZ(w.coords[1][0] / 12.0, w.coords[1][1] / 12.0, roof_level.Elevation);
 
                             Line line = Line.CreateBound(a, b);
-                            footprint.Append(line);                           
+                            footprint.Append(line);
                             p = w;
                         }
                         ModelCurveArray footPrintToModelCurveMapping = new ModelCurveArray();
@@ -112,8 +112,7 @@ namespace MyRevit
                         trans.Commit();
                     }
                 }
-            }
-            
+            }            
             return Result.Succeeded;
         }
 

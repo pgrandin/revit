@@ -98,7 +98,7 @@ namespace MyRevit
         }
 
         public Result add_dimension_from_points(ViewPlan floorView, XYZ pt1, XYZ normal1, XYZ pt2, XYZ normal2, string dimension, XYZ offset)
-        { 
+        {
             Transaction trans = new Transaction(doc);
 
             offset = new XYZ(offset.X / 12.0, offset.Y / 12.0, offset.Z);
@@ -288,7 +288,8 @@ namespace MyRevit
                 {
                     foreach (mysets s in l.sets)
                     {
-                        if(s.type == type) { 
+                        if (s.type == type)
+                        {
                             walls p = null;
                             foreach (walls w in s.walls)
                             {
@@ -427,7 +428,7 @@ namespace MyRevit
                     p_ = wall.get_Parameter(BuiltInParameter.ALL_MODEL_MARK);
                     if (null != p_)
                     {
-                        p_.Set(level.Name + "_int_"+ int_walls.Count().ToString());
+                        p_.Set(level.Name + "_int_" + int_walls.Count().ToString());
                     }
 
                     int_walls.Add(wall);

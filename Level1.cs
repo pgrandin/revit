@@ -104,7 +104,6 @@ namespace MyRevit
             add_dimension_from_point(floorView, new XYZ(170, 330, level.Elevation + 1), new XYZ(1, 0, 0), new XYZ(0, 100, 0));
             add_dimension_from_points(floorView, new XYZ(270, 330, level.Elevation + 1), new XYZ(1, 0, 0), new XYZ(270, 300, level.Elevation + 1), new XYZ(1, 0, 0), "24\"", new XYZ(0, -50, 0));
 
-
             // between columns
             add_dimension_from_point(floorView, new XYZ(400, 185, level.Elevation + 1), new XYZ(1, 0, 0), "107 1/2\"");
 
@@ -114,7 +113,7 @@ namespace MyRevit
             // test
             add_dimension_from_points(floorView, new XYZ(20, 20, level.Elevation + 1), new XYZ(400, 20, level.Elevation + 1), new XYZ(-1, 0, 0), "472\"", new XYZ(0, -150, 0));
 
-            add_dimension_from_points(floorView, new XYZ(260, 80, level.Elevation + 1), new XYZ(0, -1, 0),  new XYZ(230, 80, level.Elevation + 1), new XYZ(0, -1, 0), "65\"", new XYZ(0, -150, 0));
+            add_dimension_from_points(floorView, new XYZ(260, 80, level.Elevation + 1), new XYZ(0, -1, 0), new XYZ(230, 80, level.Elevation + 1), new XYZ(0, -1, 0), "65\"", new XYZ(0, -150, 0));
 
             return Result.Succeeded;
         }
@@ -149,7 +148,7 @@ namespace MyRevit
             }
             return Result.Succeeded;
         }
-            public Result setup()
+        public Result setup()
         {
             setup_level();
             setup_inside_walls();
