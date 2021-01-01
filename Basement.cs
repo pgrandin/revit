@@ -12,10 +12,11 @@ namespace MyRevit
     {
         public Basement(Document doc)
         {
+            this.level_id = 0;
             this.doc = doc;
             this.levels = new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>().OrderBy(l => l.Elevation).ToList();
-            this.level_id = 0;
             this.level = levels[level_id];
+            this.level_above = levels[2];
         }
 
         public Result setup_level()
@@ -47,7 +48,7 @@ namespace MyRevit
             Transaction trans = new Transaction(doc);
             using (trans = new Transaction(doc))
             {
-                trans.Start("openings");
+                trans.Start("ceiling openings");
                 for (int i = 0; i < coords2.Length; i++)
                 {
                     Line line;
@@ -86,7 +87,7 @@ namespace MyRevit
             using (StairsEditScope newStairsScope = new StairsEditScope(doc, "New Stairs"))
             {
 
-                newStairsId = newStairsScope.Start(levels[level_id].Id, levels[level_id+1].Id);
+                newStairsId = newStairsScope.Start(level.Id, levels[2].Id);
                 using (Transaction t = new Transaction(doc))
                 {
                     t.Start("Create window");

@@ -60,7 +60,8 @@ namespace MyRevit
               = new FilteredElementCollector(doc)
                 .OfClass(typeof(Level));
 
-            Level[] levels = new Level[4];
+            /*
+            Level[] levels = new Level[5];
             foreach (Level lvl_ in levels_col)
             {
                 if (lvl_.Name == "Level 1")
@@ -76,15 +77,47 @@ namespace MyRevit
                     levels[0] = lvl_;
                 }
             }
+            */
 
             // FIXME : delete Floor plans/Level 1
+
+
+            using (Transaction t = new Transaction(doc))
+            {
+                t.Start("Activate door");
+                doc.Regenerate(); 
+                t.Commit();
+            }
+
+            FilteredElementCollector floorplans
+              = new FilteredElementCollector(doc)
+                .OfClass(typeof(ViewPlan));
+
+
+
+            List<ViewPlan> ViewPlans = floorplans.Cast<ViewPlan>().ToList();
+
+            using (trans = new Transaction(doc))
+            {
+                trans.Start("Clean up views");
+
+                foreach (ViewPlan view in ViewPlans)
+                {
+                    if (view.Name == "Level 2")
+                    {
+                        doc.Delete(view.Id);
+                    }
+                }
+
+                trans.Commit();
+            }
+
 
             using (trans = new Transaction(doc))
             {
                 trans.Start("Basement");
                 Level lvl = Level.Create(doc, -8.5);
                 lvl.Name = "Basement";
-                levels[0] = lvl;
                 trans.Commit();
             }
 
@@ -93,9 +126,17 @@ namespace MyRevit
                 trans.Start("Roof");
                 Level lvl = Level.Create(doc, 20);
                 lvl.Name = "Roof";
-                levels[3] = lvl;
                 trans.Commit();
             }
+
+            using (trans = new Transaction(doc))
+            {
+                trans.Start("Garage");
+                Level lvl = Level.Create(doc, -2);
+                lvl.Name = "Garage";
+                trans.Commit();
+            }
+
 
             FilteredElementCollector DimensionTypeCollector = new FilteredElementCollector(doc);
             DimensionTypeCollector.OfClass(typeof(DimensionType));
@@ -236,6 +277,22 @@ namespace MyRevit
                 structure.SetNumberOfShellLayers(ShellLayerType.Exterior, 1);
                 structure.SetNumberOfShellLayers(ShellLayerType.Interior, 1);
 
+
+                ElementType wallSweepType = new FilteredElementCollector(doc)
+                    .OfCategory(BuiltInCategory.OST_Cornices)
+                    .WhereElementIsElementType()
+                    .Cast<ElementType>().FirstOrDefault();
+
+                if (wallSweepType != null)
+                {
+                    var wallSweepInfo = new WallSweepInfo(WallSweepType.Sweep, false);
+                    wallSweepInfo.Distance = 2;
+
+                    List<WallSweepInfo> ModSW = new List<WallSweepInfo>();
+                    // structure.AddWallSweep(wallSweepInfo);
+                }
+
+
                 newWallType.SetCompoundStructure(structure);
 
                 tx.Commit();
@@ -271,7 +328,16 @@ namespace MyRevit
             //Get application and document objects
             UIApplication uiapp = commandData.Application;
             Document doc = uiapp.ActiveUIDocument.Document;
-                       
+
+
+            ViewPlan site = new FilteredElementCollector(doc)
+                .OfClass(typeof(ViewPlan))
+                .Cast<ViewPlan>().FirstOrDefault(q
+                => q.Name == "Site");
+
+            uiapp.ActiveUIDocument.RequestViewChange(site);
+
+
             setup_units(doc);
             setup_elevation_markers(doc);
             setup_levels(doc);
@@ -283,6 +349,11 @@ namespace MyRevit
             l1.setup();
             var l2 = new Level2(doc);
             l2.setup();
+            var g = new Garage(doc);
+            g.setup();
+
+            var r = new Roof(doc);
+            r.setup_roof();
 
             // uiapp.ActiveUIDocument.RequestViewChange(floorView);
 

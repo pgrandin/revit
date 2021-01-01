@@ -11,8 +11,9 @@ namespace MyRevit
         {
             this.doc = doc;
             this.levels = new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>().OrderBy(l => l.Elevation).ToList();
-            this.level_id = 1;
+            this.level_id = 2;
             this.level = levels[level_id];
+            this.level_above = levels[3];
         }
 
 
@@ -118,10 +119,41 @@ namespace MyRevit
             return Result.Succeeded;
         }
 
-        public Result setup()
+        public Result setup_joists()
+        {
+            using (Transaction t = new Transaction(doc, "Joists"))
+            {
+                t.Start();
+                Family f = null;
+                //FIXME : move to a function that's called only once
+                string familyPath = @"C:\ProgramData\Autodesk\RVT 2019\Libraries\US Imperial\Structural Framing\Wood\Plywood Web Joist.rfa";
+                doc.LoadFamily(familyPath, out f);
+
+                XYZ pt0 = XYZ.Zero;
+                Line directionLine = Line.CreateBound(new XYZ(0, 0, 0), new XYZ(0, 5, -joist_offset));
+
+                SketchPlane sp = SketchPlane.Create(doc, Plane.CreateByNormalAndOrigin(XYZ.BasisZ, new XYZ(0, 40, -joist_offset)));
+                BeamSystem bs = BeamSystem.Create(doc, joistCurves, sp, directionLine.Direction, false);
+
+                //get the layoutRule of the beamsystem
+                Autodesk.Revit.DB.LayoutRule layoutRule = bs.LayoutRule;
+
+                //create a new instance of the LayoutRuleClearSpacing class
+                LayoutRuleClearSpacing myLayoutRuleClearSpacing =
+                            new LayoutRuleClearSpacing(2.0, BeamSystemJustifyType.Beginning);
+
+                //set the new layoutRule to the beamsystem
+                bs.LayoutRule = myLayoutRuleClearSpacing;
+
+                t.Commit();
+            }
+            return Result.Succeeded;
+        }
+            public Result setup()
         {
             setup_level();
             setup_inside_walls();
+            // setup_joists();
             return Result.Succeeded;
         }
 

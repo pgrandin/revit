@@ -54,6 +54,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Basement.cs" />
+    <Compile Include="Garage.cs" />
+    <Compile Include="Roof.cs" />
     <Compile Include="Level2.cs" />
     <Compile Include="Level.cs" />
     <Compile Include="Level1.cs" />
