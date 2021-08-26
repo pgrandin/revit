@@ -12,10 +12,10 @@ namespace MyRevit
     class Roof : MyRevit.MyLevel
     {
 
-        protected Document doc;
-        protected IList<Level> levels = null;
-        protected int level_id;
-        protected Level level;
+        // protected Document doc;
+        // protected IList<Level> levels = null;
+        // protected int level_id;
+        // protected Level level;
 
         public Roof(Document doc)
         {
@@ -37,7 +37,7 @@ namespace MyRevit
             Transaction trans = new Transaction(doc);
 
 
-            string jsonFilePath = @"C:\Users\John\source\repos\revit\data.json";
+            string jsonFilePath = @"C:\Users\John\AppData\Roaming\Autodesk\Revit\Addins\2019\data.json";
 
             List<mylevels> items;
             List<XYZ[]> coords = new List<XYZ[]>();

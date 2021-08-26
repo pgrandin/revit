@@ -271,7 +271,7 @@ namespace MyRevit
 
         public static List<XYZ[]> get_walls_from_file(Level level, string type)
         {
-            string jsonFilePath = @"C:\Users\John\source\repos\revit\data.json";
+            string jsonFilePath = @"C:\Users\John\AppData\Roaming\Autodesk\Revit\Addins\2019\data.json";
 
             List<mylevels> items;
             List<XYZ[]> coords = new List<XYZ[]>();

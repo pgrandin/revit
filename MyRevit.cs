@@ -118,7 +118,7 @@ namespace MyRevit
                 lvl.Name = "Basement";
                 trans.Commit();
             }
-
+            
             using (trans = new Transaction(doc))
             {
                 trans.Start("Roof");
@@ -126,7 +126,7 @@ namespace MyRevit
                 lvl.Name = "Roof";
                 trans.Commit();
             }
-
+            
             using (trans = new Transaction(doc))
             {
                 trans.Start("Garage");
@@ -142,7 +142,7 @@ namespace MyRevit
             DimensionType dimensionType = DimensionTypeCollector.Cast<DimensionType>().ToList().FirstOrDefault();
             using (trans = new Transaction(doc))
             {
-                trans.Start("Basement");
+                trans.Start("SetDimensionsTypes");
                 DimensionType newdimensionType = dimensionType.Duplicate("type-correct") as DimensionType;
                 newdimensionType.LookupParameter("Color").Set(0);
 
@@ -327,7 +327,6 @@ namespace MyRevit
             UIApplication uiapp = commandData.Application;
             Document doc = uiapp.ActiveUIDocument.Document;
 
-
             ViewPlan site = new FilteredElementCollector(doc)
                 .OfClass(typeof(ViewPlan))
                 .Cast<ViewPlan>().FirstOrDefault(q
@@ -349,7 +348,6 @@ namespace MyRevit
             l2.setup();
             var g = new Garage(doc);
             g.setup();
-
             var r = new Roof(doc);
             r.setup_roof();
 
