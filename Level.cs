@@ -476,7 +476,6 @@ namespace MyRevit
 
                     int_walls.Add(wall);
                 }
-                
             }
             return Result.Succeeded;
         }

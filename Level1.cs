@@ -179,7 +179,7 @@ namespace MyRevit
         }
 
         public void CreateRoomAndSeperators()
-        {            
+        {
             /*
             { "coords": [[476, 191.5], [463, 191.5]]},
             { "coords": [null, [463, 177]]},
@@ -189,9 +189,8 @@ namespace MyRevit
             { "coords": [null, [331, 177]]}
             */
 
-
             XYZ pt1 = new XYZ(463 / 12.0, 184.25 / 12.0, 0);
-            XYZ pt2 = new XYZ(350.5 / 12.0 , 184.25 / 12.0, 0);
+            XYZ pt2 = new XYZ(350.5 / 12.0, 184.25 / 12.0, 0);
 
             UV pt5 = new UV(5, 5);
 
