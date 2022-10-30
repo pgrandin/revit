@@ -17,7 +17,7 @@ namespace MyRevit
             Color = color;
         }
 
-        public static void setup_paints(Document doc){
+        public static void setup_paints(Document doc) {
             // create an array of paints and their respective colors
             Paint[] paints = new Paint[] {
                 new Paint("SW7050", new Color(207, 202, 189)),
@@ -40,7 +40,7 @@ namespace MyRevit
                     Material material = doc.GetElement(materialId) as Material;
                     material.MaterialClass = "Paint";
                     material.Color = paint.Color;
-                    using(AppearanceAssetEditScope editScope = new AppearanceAssetEditScope( doc ))
+                    using (AppearanceAssetEditScope editScope = new AppearanceAssetEditScope(doc))
                     {
                         Asset editableAsset = editScope.Start(assetElem2.Id);
                         AssetPropertyDoubleArray4d genericDiffuseProperty = editableAsset["generic_diffuse"] as AssetPropertyDoubleArray4d;
