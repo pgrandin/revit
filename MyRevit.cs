@@ -5,11 +5,11 @@ using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 
+
 namespace MyRevit
 {
     [Transaction(TransactionMode.Manual)]
     [Regeneration(RegenerationOption.Manual)]
-
 
     public class Class1 : IExternalCommand
     {
@@ -256,6 +256,32 @@ namespace MyRevit
 
             using (Transaction tx = new Transaction(doc))
             {
+                tx.Start("2x6 + Gypsum wall");
+
+                newWallType = wallType.Duplicate("2x6 + Gypsum") as WallType;
+                CompoundStructureLayer l1 = new CompoundStructureLayer(5.5 / 12, MaterialFunctionAssignment.Structure, lumber.Id);
+                CompoundStructureLayer l2 = new CompoundStructureLayer(0.5 / 12, MaterialFunctionAssignment.Finish1, gypsum.Id);
+
+                CompoundStructure structure = newWallType.GetCompoundStructure();
+
+                IList<CompoundStructureLayer> layers = structure.GetLayers();
+
+                layers.Add(l2);
+                layers.Add(l1);
+                layers.Add(l2);
+                structure.SetLayers(layers);
+
+                structure.DeleteLayer(0);
+                structure.SetNumberOfShellLayers(ShellLayerType.Exterior, 1);
+                structure.SetNumberOfShellLayers(ShellLayerType.Interior, 1);
+
+                newWallType.SetCompoundStructure(structure);
+
+                tx.Commit();
+            }
+
+            using (Transaction tx = new Transaction(doc))
+            {
                 tx.Start("2x4 + Gypsum wall with Exterior");
 
                 newWallType = wallType.Duplicate("2x4 + Gypsum wall with Exterior") as WallType;
@@ -323,6 +349,8 @@ namespace MyRevit
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
+            // Main entrypoint
+
             //Get application and document objects
             UIApplication uiapp = commandData.Application;
             Document doc = uiapp.ActiveUIDocument.Document;
@@ -334,22 +362,23 @@ namespace MyRevit
 
             uiapp.ActiveUIDocument.RequestViewChange(site);
 
+            Paint.setup_paints(doc);
 
             setup_units(doc);
             setup_elevation_markers(doc);
             setup_levels(doc);
             setup_wall_struct(doc);
 
-            var b = new Basement(doc);
-            b.setup();
+            // var b = new Basement(doc);
+            // b.setup();
             var l1 = new Level1(doc);
             l1.setup();
-            var l2 = new Level2(doc);
-            l2.setup();
-            var g = new Garage(doc);
-            g.setup();
-            var r = new Roof(doc);
-            r.setup_roof();
+            // var l2 = new Level2(doc);
+            // l2.setup();
+            // var g = new Garage(doc);
+            // g.setup();
+            // var r = new Roof(doc);
+            // r.setup_roof();
 
             // uiapp.ActiveUIDocument.RequestViewChange(floorView);
 
