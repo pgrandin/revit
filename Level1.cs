@@ -76,22 +76,40 @@ namespace MyRevit
             insert_inside_walls();
 
             // playroom
-            add_dimension_from_point(floorView, new XYZ(20, 50, level.Elevation + 1), new XYZ(0, 1, 0), "158\"", new XYZ(-60, 0, 0));
+            add_dimension_from_point(floorView, new XYZ(30, 50, level.Elevation + 1), new XYZ(0, 1, 0), "158\"", new XYZ(-90, 0, 0));
             add_dimension_from_point(floorView, new XYZ(24, 130, level.Elevation + 1), new XYZ(1, 0, 0), "87 1/2\"");
-            add_dimension_from_point(floorView, new XYZ(50, 20, level.Elevation + 1), new XYZ(1, 0, 0), new XYZ(0, -100, 0));
+            add_dimension_from_point(floorView, new XYZ(50, 20, level.Elevation + 1), new XYZ(1, 0, 0), "123 1/2\"", new XYZ(0, -100, 0));
+
+            // playroom to stairs
+            add_dimension_from_points(floorView, new XYZ(175, 150, level.Elevation + 1), new XYZ(0, 1, 0), new XYZ(195, 90, level.Elevation + 1), new XYZ(0, 1, 0), "84 1/2\"", new XYZ(-15, 0, 0));
+            // { "coords": [null, [300, 106.5]]},
+            add_dimension_from_points(floorView, new XYZ(175, 109, level.Elevation + 1), new XYZ(1, 0, 0), new XYZ(310, 109, level.Elevation + 1), new XYZ(-1, 0, 0), "84 1/2\"", new XYZ(0, -15, 0));
+
+            add_dimension_from_point(floorView, new XYZ(250, 90, level.Elevation + 1), new XYZ(0, 1, 0), "40\"", new XYZ(90, 0, 0));
 
             // family room
-            add_dimension_from_point(floorView, new XYZ(20, 200, level.Elevation + 1), new XYZ(0, 1, 0), "210\"", new XYZ(-60, 0, 0));
+            add_dimension_from_point(floorView, new XYZ(30, 200, level.Elevation + 1), new XYZ(0, 1, 0), "210\"", new XYZ(-90, 0, 0));
+            add_dimension_from_point(floorView, new XYZ(8, 200, level.Elevation + 1), new XYZ(0, 1, 0), "59\"", new XYZ(-30, 0, 0));
+            add_dimension_from_point(floorView, new XYZ(8, 360, level.Elevation + 1), new XYZ(0, 1, 0), "34\"", new XYZ(-30, 0, 0));
+
+            add_dimension_from_points(floorView, new XYZ(8, 200, level.Elevation + 1), new XYZ(0, 1, 0), new XYZ(8, 360, level.Elevation + 1), new XYZ(0, -1, 0), "34\"", new XYZ(-30, 0, 0));
 
             // reading room
             add_dimension_from_point(floorView, new XYZ(362, 20, level.Elevation + 1), new XYZ(1, 0, 0), "213 1/2\"", new XYZ(0, -100, 0));
 
-            // hallway
-            add_dimension_from_point(floorView, new XYZ(205, 20, level.Elevation + 1), new XYZ(0, 1, 0));
-            add_dimension_from_point(floorView, new XYZ(205, 20, level.Elevation + 1), new XYZ(1, 0, 0), new XYZ(0, -100, 0));
+            // mudroom
+            add_dimension_from_point(floorView, new XYZ(225, 20, level.Elevation + 1), new XYZ(0, 1, 0), "60\"");
+            add_dimension_from_point(floorView, new XYZ(205, 20, level.Elevation + 1), new XYZ(1, 0, 0), "38\"", new XYZ(0, -100, 0));
+            add_dimension_from_point(floorView, new XYZ(240, 20, level.Elevation + 1), new XYZ(1, 0, 0), "23 1/2\"", new XYZ(0, -100, 0));
 
-            // toilets
-            add_dimension_from_point(floorView, new XYZ(140, 20, level.Elevation + 1), new XYZ(1, 0, 0), new XYZ(0, -100, 0));
+            // right side AC pillar
+            add_dimension_from_points(floorView, new XYZ(460, 195, level.Elevation + 1), new XYZ(1, 0, 0), new XYZ(460, 175, level.Elevation + 1), new XYZ(1, 0, 0), "12\"", new XYZ(0, 15, 0));
+            add_dimension_from_points(floorView, new XYZ(465, 195, level.Elevation + 1), new XYZ(0, -1, 0), new XYZ(465, 170, level.Elevation + 1), new XYZ(0, 1, 0), "19\"", new XYZ(60, 0, 0));
+            // left side AC pillar
+            add_dimension_from_points(floorView, new XYZ(360, 195, level.Elevation + 1), new XYZ(-1, 0, 0), new XYZ(360, 175, level.Elevation + 1), new XYZ(-1, 0, 0), "12\"", new XYZ(0, 15, 0));
+
+            // powder room
+            add_dimension_from_point(floorView, new XYZ(140, 20, level.Elevation + 1), new XYZ(1, 0, 0), "55\"", new XYZ(0, -100, 0));
 
             // dining
             add_dimension_from_point(floorView, new XYZ(400, 270, level.Elevation + 1), new XYZ(1, 0, 0), "132\"");
@@ -100,20 +118,20 @@ namespace MyRevit
             add_dimension_from_point(floorView, new XYZ(465, 20, level.Elevation + 1), new XYZ(0, 1, 0), "172 1/2\"", new XYZ(60, 0, 0));
             add_dimension_from_point(floorView, new XYZ(465, 250, level.Elevation + 1), new XYZ(0, 1, 0), "124 1/2\"", new XYZ(60, 0, 0));
 
+            // kitchen
+            add_dimension_from_point(floorView, new XYZ(315, 250, level.Elevation + 1), new XYZ(0, 1, 0), "184\"", new XYZ(0, 0, 0));
+            add_dimension_from_point(floorView, new XYZ(174, 250, level.Elevation + 1), new XYZ(0, 1, 0), "153\"", new XYZ(0, 0, 0));
+
             // kitchen + living room
-            add_dimension_from_point(floorView, new XYZ(170, 330, level.Elevation + 1), new XYZ(1, 0, 0), new XYZ(0, 100, 0));
-            add_dimension_from_points(floorView, new XYZ(270, 330, level.Elevation + 1), new XYZ(1, 0, 0), new XYZ(270, 300, level.Elevation + 1), new XYZ(1, 0, 0), "24\"", new XYZ(0, -50, 0));
+            add_dimension_from_point(floorView, new XYZ(170, 360, level.Elevation + 1), new XYZ(1, 0, 0), "334\"", new XYZ(0, 100, 0));
+            add_dimension_from_point(floorView, new XYZ(150, 200, level.Elevation + 1), new XYZ(1, 0, 0), "169 1/2\"", new XYZ(0, 10, 0));
+            add_dimension_from_point(floorView, new XYZ(200, 200, level.Elevation + 1), new XYZ(1, 0, 0), "160\"", new XYZ(0, 10, 0));
 
             // between columns
             add_dimension_from_point(floorView, new XYZ(400, 185, level.Elevation + 1), new XYZ(1, 0, 0), "107 1/2\"");
 
             // hallway to kitchen
-            add_dimension_from_point(floorView, new XYZ(170, 129, level.Elevation + 1), new XYZ(1, 0, 0));
-
-            // test
-            add_dimension_from_points(floorView, new XYZ(20, 20, level.Elevation + 1), new XYZ(400, 20, level.Elevation + 1), new XYZ(-1, 0, 0), "472\"", new XYZ(0, -150, 0));
-
-            add_dimension_from_points(floorView, new XYZ(260, 80, level.Elevation + 1), new XYZ(0, -1, 0), new XYZ(230, 80, level.Elevation + 1), new XYZ(0, -1, 0), "65\"", new XYZ(0, -150, 0));
+            add_dimension_from_point(floorView, new XYZ(170, 129, level.Elevation + 1), new XYZ(1, 0, 0), new XYZ(0, 100, 0));
 
             return Result.Succeeded;
         }
@@ -148,11 +166,56 @@ namespace MyRevit
             }
             return Result.Succeeded;
         }
+
+        public Result setup_doors()
+        {
+            XYZ[] doors_locations = {
+                new XYZ(187.5 / 12.0, 43 / 12.0, 0.0),  // powder room
+                new XYZ(285 / 12.0, 0.0, (double) DoorOperations.Should_flip), // entrance
+                new XYZ(209 / 12.0, 0.0, (double) DoorOperations.Should_flip), // garage
+            };
+
+            return insert_doors(doors_locations, level);
+        }
+
+        public void CreateRoomAndSeperators()
+        {            
+            /*
+            { "coords": [[476, 191.5], [463, 191.5]]},
+            { "coords": [null, [463, 177]]},
+            { "coords": [null, [476, 177]]},
+            { "coords": [[340, 191.5], [350.5, 191.5]]},
+            { "coords": [null, [350.5, 177]]},
+            { "coords": [null, [331, 177]]}
+            */
+
+
+            XYZ pt1 = new XYZ(463 / 12.0, 184.25 / 12.0, 0);
+            XYZ pt2 = new XYZ(350.5 / 12.0 , 184.25 / 12.0, 0);
+
+            UV pt5 = new UV(5, 5);
+
+            CurveArray curveArray = new CurveArray();
+            curveArray.Append(Line.CreateBound(pt1, pt2));
+
+            using (Transaction trans = new Transaction(doc))
+            {
+                trans.Start("Create Room and Boundaries");
+                ModelCurveArray lines = doc.Create.NewRoomBoundaryLines(floorView.SketchPlane, curveArray, floorView);
+                // Room room = doc.Create.NewRoom(activeView.GenLevel, pt5);
+                //now modify the "room" Element's Name, Number, etc.
+                trans.Commit();
+            }
+        }
+
+
         public Result setup()
         {
             setup_level();
             setup_inside_walls();
             // setup_joists();
+            setup_doors();
+            CreateRoomAndSeperators();
             return Result.Succeeded;
         }
 
