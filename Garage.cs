@@ -27,6 +27,7 @@ namespace MyRevit
                 .Cast<WallType>().FirstOrDefault(q
                 => q.Name == "2x4 + Gypsum wall with Exterior");
 
+            // FIXME : this should be a concrete slab
             // Get a floor type for floor creation
             FloorType floorType = new FilteredElementCollector(doc)
                 .OfClass(typeof(FloorType))
