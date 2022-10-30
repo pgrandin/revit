@@ -240,7 +240,8 @@ namespace MyRevit
 
                     Family tf = null;
                     //Choose appropriate path
-                    string tfamilyPath = @"C:\Users\John\Documents\owncloud\revit\Families\11x8 title block.rfa";
+                    // string tfamilyPath = @"C:\Users\John\Documents\owncloud\revit\Families\11x8 title block.rfa";
+                    string tfamilyPath = @"C:\ProgramData\Autodesk\RVT 2019\Libraries\US Imperial\Titleblocks\A 8.5 x 11 Vertical.rfa";
                     doc.LoadFamily(tfamilyPath, out tf);
 
                     // Get the available title block from document
@@ -249,7 +250,13 @@ namespace MyRevit
                     Element TB = null;
                     foreach (Element e in col__)
                     {
-                        if (e.Name.Contains("11x8"))
+                        // if (e.Name.Contains("11x8"))
+                        if (e.Name.Contains("A 8.5 x 11 Vertical"))
+                        {
+                            FS = e as FamilySymbol;
+                            TB = e;
+                            break;
+                        }
                         {
                             TB = e;
                         }
@@ -317,16 +324,16 @@ namespace MyRevit
 
             using (trans = new Transaction(doc))
             {
-                trans.Start("Basement");
+                trans.Start("Exterior walls");
 
                 SketchPlane sketch = SketchPlane.Create(doc, level.Id);
-
                 CurveArray floor_profile = new CurveArray();    // profile for the floor
+                trans.Commit();
 
                 foreach (XYZ[] p in coords)
                 {
                     Line line;
-
+                    trans.Start("Exterior walls");
                     line = Line.CreateBound(p[0], p[1]);
 
                     floor_profile.Append(line);
@@ -354,15 +361,31 @@ namespace MyRevit
                     {
                         p_.Set(level.Name + "_ext_" + ext_walls.Count().ToString());
                     }
+                    trans.Commit();
+
+
+                    ElementType wallSweepType = new FilteredElementCollector(doc)
+                          .OfCategory(BuiltInCategory.OST_Cornices)
+                          .WhereElementIsElementType()
+                          .Cast<ElementType>().FirstOrDefault();
+                    if (wallSweepType != null)
+                    {
+                        var wallSweepInfo = new WallSweepInfo(WallSweepType.Sweep, false);
+                        wallSweepInfo.Distance = 2;
+                        trans.Start("External walls sweep");
+                        WallSweep.Create(wall, wallSweepType.Id, wallSweepInfo);
+                        trans.Commit();
+                    }
 
                 }
 
                 if (floorType != null)
                 {
+                    trans.Start("Exterior walls");
                     XYZ normal = XYZ.BasisZ;
                     floor = doc.Create.NewFloor(floor_profile, floorType, level, true, normal);
+                    trans.Commit();
                 }
-                trans.Commit();
             }
             return Result.Succeeded;
         }
@@ -405,14 +428,20 @@ namespace MyRevit
                 .Cast<WallType>().FirstOrDefault(q
                 => q.Name == "2x4 + Gypsum");
 
+            WallType wType_6 = new FilteredElementCollector(doc)
+                .OfClass(typeof(WallType))
+                .Cast<WallType>().FirstOrDefault(q
+                => q.Name == "2x6 + Gypsum");
 
             using (trans = new Transaction(doc))
             {
                 trans.Start("Inside walls");
                 SketchPlane sketch = SketchPlane.Create(doc, level.Id);
+                trans.Commit();
 
                 foreach (XYZ[] p in coords)
                 {
+                    trans.Start("Inside walls");
                     Line line;
                     line = Line.CreateBound(p[0], p[1]);
 
@@ -430,10 +459,24 @@ namespace MyRevit
                     {
                         p_.Set(level.Name + "_int_" + int_walls.Count().ToString());
                     }
+                    trans.Commit();
+
+                    ElementType wallSweepType = new FilteredElementCollector(doc)
+                          .OfCategory(BuiltInCategory.OST_Cornices)
+                          .WhereElementIsElementType()
+                          .Cast<ElementType>().FirstOrDefault();
+                    if (wallSweepType != null)
+                    {
+                        var wallSweepInfo = new WallSweepInfo(WallSweepType.Sweep, false);
+                        wallSweepInfo.Distance = 2;
+                        trans.Start("Inside walls");
+                        WallSweep.Create(wall, wallSweepType.Id, wallSweepInfo);
+                        trans.Commit();
+                    }
 
                     int_walls.Add(wall);
                 }
-                trans.Commit();
+                
             }
             return Result.Succeeded;
         }
