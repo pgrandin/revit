@@ -10,10 +10,11 @@ namespace MyRevit
 {
     class Basement : MyRevit.MyLevel
     {
-        public Basement(Document doc)
+        public Basement(UIApplication uiapp)
         {
+            this.uiapp = uiapp;
+            this.doc = uiapp.ActiveUIDocument.Document;
             this.level_id = 0;
-            this.doc = doc;
             this.levels = new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>().OrderBy(l => l.Elevation).ToList();
             this.level = levels[level_id];
             this.level_above = levels[2];
@@ -279,6 +280,7 @@ namespace MyRevit
             setup_inside_walls();
             setup_doors();
             setup_windows();
+            ExportToImage(floorView);
             return Result.Succeeded;
         }
 

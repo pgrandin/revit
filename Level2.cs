@@ -7,13 +7,23 @@ namespace MyRevit
 {
     class Level2 : MyRevit.MyLevel
     {
-        public Level2(Document doc)
+        public Level2(UIApplication uiapp, IList<Paint> paints)
         {
-            this.doc = doc;
+            this.uiapp = uiapp;
+            this.doc = uiapp.ActiveUIDocument.Document;
             this.levels = new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>().OrderBy(l => l.Elevation).ToList();
             this.level_id = 3;
             this.level = levels[level_id];
             this.level_above = levels[4];
+            this.paints = paints;
+
+            setup_level();
+            setup_floor();
+            setup_inside_walls();
+            setup_doors();
+            paint_walls();
+
+            ExportToImage(floorView);
         }
 
 
@@ -83,9 +93,13 @@ namespace MyRevit
 
             // bathroom
             add_dimension_from_point(floorView, new XYZ(10, 60, level.Elevation + 1), new XYZ(0, 1, 0), "115 1/2\"", new XYZ(-40, 0, 0));
-            add_dimension_from_point(floorView, new XYZ(10, 140, level.Elevation + 1), new XYZ(0, 1, 0), "48\"", new XYZ(-40, 0, 0));
+            add_dimension_from_point(floorView, new XYZ(10, 140, level.Elevation + 1), new XYZ(0, 1, 0), "65 1/2\"", new XYZ(-40, 0, 0));
             add_dimension_from_point(floorView, new XYZ(60, 20, level.Elevation + 1), new XYZ(1, 0, 0), "113 1/2\"");
             add_dimension_from_point(floorView, new XYZ(50, 160, level.Elevation + 1), new XYZ(1, 0, 0), "100\"", new XYZ(0, 50, 0));
+
+            // laundry room
+            add_dimension_from_point(floorView, new XYZ(125, 20, level.Elevation + 1), new XYZ(1, 0, 0), "36\"");
+            add_dimension_from_point(floorView, new XYZ(125, 20, level.Elevation + 1), new XYZ(0, 1, 0), "65 1/2\"", new XYZ(50, 0, 0));
 
             // bathroom 2
             add_dimension_from_point(floorView, new XYZ(200, 200, level.Elevation + 1), new XYZ(0, 1, 0), "59\"", new XYZ(-50, 0, 0));
@@ -97,12 +111,55 @@ namespace MyRevit
             return Result.Succeeded;
         }
 
-        public Result setup()
+        public Result setup_doors()
         {
-            setup_level();
-            setup_floor();
-            setup_inside_walls();
-            return Result.Succeeded;
+            XYZ[] doors_locations = {
+                new XYZ(439 / 12.0, 184 / 12.0, (double) (DoorOperations.Should_flip | DoorOperations.Should_rotate)),  // Office, closet
+                new XYZ(397 / 12.0, 136 / 12.0, 0.0),  // bedroom, closet
+                new XYZ(352 / 12.0, 111 / 12.0, (double) (DoorOperations.Should_rotate)),  // bedroom, door
+                new XYZ(352 / 12.0, 220 / 12.0, 0.0),  // Office, door
+                new XYZ(311.5 / 12.0, 230 / 12.0, 0.0),  // Bathroom, door
+                new XYZ(311.5 / 12.0, 268 / 12.0, (double) (DoorOperations.Should_rotate)),  // Office 2, door
+                new XYZ(81 / 12.0, 120 / 12.0, 0.0),  // Powder room, door
+                new XYZ(42 / 12.0, -60 / 12.0, (double) (DoorOperations.Should_rotate)),  // Walk in closet
+            };
+
+            return insert_doors(doors_locations, level);
+        }
+
+        public void paint_walls(){
+
+            // Revit walls exterior is left hand side, interior is right hand side
+            int[] sw7009_int = {5, 6, 7, 8, 9, 12, 13, 22 };
+            foreach (int i in sw7009_int){
+                paint_wall(int_walls[i], ShellLayerType.Interior, "SW7009");
+            }
+
+            int[] sw7009_ext = {2, 3, 4, 22};
+            foreach (int i in sw7009_ext)            {
+                paint_wall(int_walls[i], ShellLayerType.Exterior, "SW7009");
+            }
+
+            int[] sw7050_int = {};
+            foreach (int i in sw7050_int){
+                paint_wall(int_walls[i], ShellLayerType.Interior, "SW7050");
+            }
+
+            int[] sw7050_ext = {10};
+            foreach (int i in sw7050_ext){
+                paint_wall(int_walls[i], ShellLayerType.Exterior, "SW7050");
+            }
+
+            int[] sw7009_int2 = {8};
+            foreach (int i in sw7009_int2){
+                paint_wall(ext_walls[i], ShellLayerType.Interior, "SW7009");
+            }
+
+            int[] sw7050_int2 = {};
+            foreach (int i in sw7050_int2){
+                paint_wall(ext_walls[i], ShellLayerType.Interior, "SW7050");
+            }
+
         }
 
     }

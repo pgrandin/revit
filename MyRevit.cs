@@ -1,4 +1,3 @@
-
 using System.Collections.Generic;
 using System.Linq;
 using Autodesk.Revit.Attributes;
@@ -347,6 +346,19 @@ namespace MyRevit
             return Result.Succeeded;
         }
 
+
+        public Result create_schedule(Document doc){
+            Transaction trans = new Transaction(doc, "Create schedule");
+            trans.Start();
+            ViewSchedule vs = ViewSchedule.CreateSchedule(doc, new ElementId(BuiltInCategory.OST_Walls), new ElementId(BuiltInCategory.OST_Walls));
+            vs.Name = "Paint schedule";
+            ScheduleSortGroupField FamilyTypeSorting = null;
+            ScheduleFilter BaseConstraintFilter = null;
+
+            trans.Commit();
+            return Result.Succeeded;
+        }
+
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             // Main entrypoint
@@ -362,23 +374,29 @@ namespace MyRevit
 
             uiapp.ActiveUIDocument.RequestViewChange(site);
 
-            Paint.setup_paints(doc);
+            IList<Paint> paints = new List<Paint>(); 
+
+            paints.Add(new Paint("SW7050", new Color(207, 202, 189))); // Useful Gray
+            paints.Add(new Paint("SW6840", new Color(181,  77, 127))); // Exuberant Pink
+            paints.Add(new Paint("SW7009", new Color(232, 227, 217))); // Pearly White
+
+            Paint.setup_paints(doc, paints);
 
             setup_units(doc);
             setup_elevation_markers(doc);
             setup_levels(doc);
             setup_wall_struct(doc);
 
-            // var b = new Basement(doc);
+            // var b = new Basement(uiapp);
             // b.setup();
-            var l1 = new Level1(doc);
-            l1.setup();
-            // var l2 = new Level2(doc);
-            // l2.setup();
+            var l1 = new Level1(uiapp, paints);
+            var l2 = new Level2(uiapp, paints);
             // var g = new Garage(doc);
             // g.setup();
             // var r = new Roof(doc);
             // r.setup_roof();
+
+            // create_schedule(doc);
 
             // uiapp.ActiveUIDocument.RequestViewChange(floorView);
 

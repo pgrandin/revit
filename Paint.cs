@@ -2,27 +2,26 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Visual;
 
 using System.Linq;
+using System.Collections.Generic;
 
 namespace MyRevit
 {
-    // a Paint class with name and color
     class Paint
     {
         public string Name { get; set; }
         public Color Color { get; set; }
 
+        public Material Material { get; set; }
+
         public Paint(string name, Color color)
         {
             Name = name;
             Color = color;
+            Material = null;
         }
 
-        public static void setup_paints(Document doc) {
+        public static void setup_paints(Document doc, IList<Paint> paints) {
             // create an array of paints and their respective colors
-            Paint[] paints = new Paint[] {
-                new Paint("SW7050", new Color(207, 202, 189)),
-                new Paint("SW6840", new Color(181, 77, 127)),
-            };
 
             // Create a new paint material
             Transaction trans;
@@ -50,6 +49,15 @@ namespace MyRevit
 
                     material.AppearanceAssetId = assetElem2.Id;
                     material.UseRenderAppearanceForShading = true;
+
+                    // Set the material's manufacturer and manufacturer's material ID
+                    var parameterManufacturer = material.get_Parameter(BuiltInParameter.ALL_MODEL_MANUFACTURER);
+                    parameterManufacturer.Set("Sherwin Williams");
+
+                    var parameterModel = material.get_Parameter(BuiltInParameter.ALL_MODEL_MODEL);
+                    parameterModel.Set(paint.Name);
+
+                    paint.Material = material;
                 }
                 trans.Commit();
             }

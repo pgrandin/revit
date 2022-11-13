@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
@@ -6,7 +7,6 @@ using Autodesk.Revit.UI;
 using System.Linq;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using System.IO;
 
 namespace MyRevit
 {
@@ -45,6 +45,7 @@ namespace MyRevit
 
     class MyLevel
     {
+        protected UIApplication uiapp;
         protected Document doc;
         protected ViewPlan floorView;
         protected ViewPlan ceilingView;
@@ -58,6 +59,7 @@ namespace MyRevit
         protected IList<Wall> ext_walls = new List<Wall>();
         protected IList<Wall> int_walls = new List<Wall>();
         protected IList<mysets> dataset = null;
+        protected IList<Paint> paints = null;
 
         public MyLevel() { }
 
@@ -199,7 +201,8 @@ namespace MyRevit
 
             if (vt == ViewType.FloorPlan)
             {
-                vf = ViewFamily.StructuralPlan;
+                vf = ViewFamily.FloorPlan;
+                // vf = ViewFamily.StructuralPlan;
             }
             else if (vt == ViewType.CeilingPlan)
             {
@@ -349,8 +352,6 @@ namespace MyRevit
                     Wall wall = Wall.Create(doc, line as Curve, level.Id, true);
                     wall.WallType = wType;
 
-                    ext_walls.Add(wall);
-
                     Parameter p_ = wall.get_Parameter(BuiltInParameter.WALL_HEIGHT_TYPE);
                     if (null != p_)
                     {
@@ -363,19 +364,9 @@ namespace MyRevit
                     }
                     trans.Commit();
 
+                    // add_wall_sweep(wall);
 
-                    ElementType wallSweepType = new FilteredElementCollector(doc)
-                          .OfCategory(BuiltInCategory.OST_Cornices)
-                          .WhereElementIsElementType()
-                          .Cast<ElementType>().FirstOrDefault();
-                    if (wallSweepType != null)
-                    {
-                        var wallSweepInfo = new WallSweepInfo(WallSweepType.Sweep, false);
-                        wallSweepInfo.Distance = 2;
-                        trans.Start("External walls sweep");
-                        WallSweep.Create(wall, wallSweepType.Id, wallSweepInfo);
-                        trans.Commit();
-                    }
+                    ext_walls.Add(wall);
 
                 }
 
@@ -386,6 +377,25 @@ namespace MyRevit
                     floor = doc.Create.NewFloor(floor_profile, floorType, level, true, normal);
                     trans.Commit();
                 }
+            }
+            return Result.Succeeded;
+        }
+
+
+        public Result add_wall_sweep(Wall wall)
+        {
+            Transaction trans = new Transaction(doc);
+            ElementType wallSweepType = new FilteredElementCollector(doc)
+                  .OfCategory(BuiltInCategory.OST_Cornices)
+                  .WhereElementIsElementType()
+                  .Cast<ElementType>().FirstOrDefault();
+            if (wallSweepType != null)
+            {
+                var wallSweepInfo = new WallSweepInfo(WallSweepType.Sweep, false);
+                wallSweepInfo.Distance = 0;
+                trans.Start("External walls sweep");
+                WallSweep.Create(wall, wallSweepType.Id, wallSweepInfo);
+                trans.Commit();
             }
             return Result.Succeeded;
         }
@@ -447,7 +457,16 @@ namespace MyRevit
 
                     // Create non structural walls
                     Wall wall = Wall.Create(doc, line as Curve, level.Id, false);
-                    wall.WallType = wType;
+
+                    // Temporary solution for the one 2x6 wall
+                    if (level.Name == "Level 1" && int_walls.Count() == 1)
+                    {
+                        wall.WallType = wType_6;
+                    }
+                    else
+                    {
+                        wall.WallType = wType;
+                    }
 
                     Parameter p_ = wall.get_Parameter(BuiltInParameter.WALL_HEIGHT_TYPE);
                     if (null != p_)
@@ -461,18 +480,7 @@ namespace MyRevit
                     }
                     trans.Commit();
 
-                    ElementType wallSweepType = new FilteredElementCollector(doc)
-                          .OfCategory(BuiltInCategory.OST_Cornices)
-                          .WhereElementIsElementType()
-                          .Cast<ElementType>().FirstOrDefault();
-                    if (wallSweepType != null)
-                    {
-                        var wallSweepInfo = new WallSweepInfo(WallSweepType.Sweep, false);
-                        wallSweepInfo.Distance = 2;
-                        trans.Start("Inside walls");
-                        WallSweep.Create(wall, wallSweepType.Id, wallSweepInfo);
-                        trans.Commit();
-                    }
+                    // add_wall_sweep(wall);
 
                     int_walls.Add(wall);
                 }
@@ -480,12 +488,40 @@ namespace MyRevit
             return Result.Succeeded;
         }
 
+        public Wall find_hosting_wall(XYZ location){
+            #region Find the hosting Wall (nearest wall to the insertion point)
+
+            FilteredElementCollector collector = new FilteredElementCollector(doc);
+            collector.OfClass(typeof(Wall));
+
+            List<Wall> walls = collector.Cast<Wall>().Where(wl => wl.LevelId == level.Id).ToList();
+
+            Wall w_ = null;
+
+            double distance = double.MaxValue;
+
+            foreach (Wall w in walls)
+            {
+                double proximity = (w.Location as LocationCurve).Curve.Distance(location);
+
+                if (proximity < distance)
+                {
+                    distance = proximity;
+                    w_ = w;
+                }
+            }
+
+            #endregion
+
+            return w_;
+        }
+
         public Result insert_doors(XYZ[] doors_locations, Level level)
         {
             FamilySymbol fs = new FilteredElementCollector(doc)
                 .OfClass(typeof(FamilySymbol))
                 .Cast<FamilySymbol>().FirstOrDefault(q
-                => q.Name == "36\" x 84\"");
+                => q.Name == "30\" x 80\"");
 
             using (Transaction t = new Transaction(doc))
             {
@@ -502,47 +538,28 @@ namespace MyRevit
                 DoorOperations orientation = (DoorOperations)location.Z;
                 XYZ door_location = new XYZ(location.X, location.Y, level.Elevation);
 
-                #region Find the hosting Wall (nearest wall to the insertion point)
+                Wall w = find_hosting_wall(door_location);
 
-                FilteredElementCollector collector = new FilteredElementCollector(doc);
-                collector.OfClass(typeof(Wall));
-
-                List<Wall> walls = collector.Cast<Wall>().Where(wl => wl.LevelId == level.Id).ToList();
-
-                Wall w_ = null;
-
-                double distance = double.MaxValue;
-
-                foreach (Wall w in walls)
+                if (w != null)
                 {
-                    double proximity = (w.Location as LocationCurve).Curve.Distance(door_location);
-
-                    if (proximity < distance)
+                    using (Transaction t = new Transaction(doc))
                     {
-                        distance = proximity;
-                        w_ = w;
+                        t.Start("Create door");
+
+                        FamilyInstance door = doc.Create.NewFamilyInstance(door_location, fs, w, level, Autodesk.Revit.DB.Structure.StructuralType.NonStructural);
+                        // Doors probably face up by default. Or maybe it depends on the wall direction?
+                        // E-W wall = door N by default
+
+                        if ((orientation & DoorOperations.Should_flip) != 0)
+                        {
+                            door.flipFacing();
+                        }
+                        if ((orientation & DoorOperations.Should_rotate) != 0)
+                        {
+                            door.flipHand();
+                        }
+                        t.Commit();
                     }
-                }
-
-                #endregion
-
-                using (Transaction t = new Transaction(doc))
-                {
-                    t.Start("Create door");
-
-                    FamilyInstance door = doc.Create.NewFamilyInstance(door_location, fs, w_, level, Autodesk.Revit.DB.Structure.StructuralType.NonStructural);
-                    // Doors probably face up by default. Or maybe it depends on the wall direction?
-                    // E-W wall = door N by default
-
-                    if ((orientation & DoorOperations.Should_flip) != 0)
-                    {
-                        door.flipFacing();
-                    }
-                    if ((orientation & DoorOperations.Should_rotate) != 0)
-                    {
-                        door.flipHand();
-                    }
-                    t.Commit();
                 }
             }
             return Result.Succeeded;
@@ -570,49 +587,84 @@ namespace MyRevit
                 DoorOperations orientation = (DoorOperations)location.Z;
                 XYZ window_location = new XYZ(location.X, location.Y, level.Elevation + 2.5); // Windows should be at 30" from the ground
 
-                #region Find the hosting Wall (nearest wall to the insertion point)
+                Wall w = find_hosting_wall(window_location);
 
-                FilteredElementCollector collector = new FilteredElementCollector(doc);
-                collector.OfClass(typeof(Wall));
-
-                List<Wall> walls = collector.Cast<Wall>().Where(wl => wl.LevelId == level.Id).ToList();
-
-                Wall w_ = null;
-
-                double distance = double.MaxValue;
-
-                foreach (Wall w in walls)
+                if (w != null)
                 {
-                    double proximity = (w.Location as LocationCurve).Curve.Distance(window_location);
-
-                    if (proximity < distance)
+                    using (Transaction t = new Transaction(doc))
                     {
-                        distance = proximity;
-                        w_ = w;
+                        t.Start("Create window");
+
+                        FamilyInstance window = doc.Create.NewFamilyInstance(window_location, wfs, w, level, Autodesk.Revit.DB.Structure.StructuralType.NonStructural);
+
+                        if ((orientation & DoorOperations.Should_flip) != 0)
+                        {
+                            window.flipFacing();
+                        }
+                        if ((orientation & DoorOperations.Should_rotate) != 0)
+                        {
+                            window.flipHand();
+                        }
+                        t.Commit();
                     }
-                }
-
-                #endregion
-
-                using (Transaction t = new Transaction(doc))
-                {
-                    t.Start("Create window");
-
-                    FamilyInstance window = doc.Create.NewFamilyInstance(window_location, wfs, w_, level, Autodesk.Revit.DB.Structure.StructuralType.NonStructural);
-
-                    if ((orientation & DoorOperations.Should_flip) != 0)
-                    {
-                        window.flipFacing();
-                    }
-                    if ((orientation & DoorOperations.Should_rotate) != 0)
-                    {
-                        window.flipHand();
-                    }
-                    t.Commit();
                 }
             }
 
             return Result.Succeeded;
+        }
+
+        public Result ExportToImage(View view)
+        {
+            Result r = Result.Failed;
+
+            using (Transaction tx = new Transaction(this.doc))
+            {
+                tx.Start("Export Image");
+
+                string desktop_path = Environment.GetFolderPath(
+                  Environment.SpecialFolder.Desktop);
+               
+                string filepath = Path.Combine(desktop_path, view.Name);
+
+                ImageExportOptions img = new ImageExportOptions();
+
+                img.ZoomType = ZoomFitType.FitToPage;
+                img.PixelSize = 1920;
+                img.ImageResolution = ImageResolution.DPI_600;
+                img.FitDirection = FitDirectionType.Horizontal;
+                img.ExportRange = ExportRange.CurrentView;
+                img.HLRandWFViewsFileType = ImageFileType.PNG;
+                img.FilePath = filepath;
+                img.ShadowViewsFileType = ImageFileType.PNG;
+
+                this.doc.ExportImage(img);
+
+                tx.RollBack();
+
+                filepath = Path.ChangeExtension(filepath, "png");
+
+                r = Result.Succeeded;
+            }
+            return r;
+        }
+
+        public void paint_wall(Wall wall, ShellLayerType slt, string color){
+            LocationCurve locationCurve = wall.Location as LocationCurve;
+            Curve curve = locationCurve.Curve;
+            // Get the side faces
+            IList<Reference> sideFaces = HostObjectUtils.GetSideFaces(wall, slt);
+            // access the side face
+            Face face = doc.GetElement(sideFaces[0]).GetGeometryObjectFromReference(sideFaces[0]) as Face;            
+
+            // Find the paint with name "SW7009" from the IList of paints
+            Paint paint = paints.Where(p => p.Name == color).First();
+            // paint the wall
+            using (Transaction trans = new Transaction(doc))
+            {
+                trans.Start("Paint wall face");
+                doc.Paint(wall.Id, face, paint.Material.Id);
+                trans.Commit();
+            }
         }
 
     }
