@@ -21,11 +21,80 @@ namespace MyRevit
             setup_floor();
             setup_inside_walls();
             setup_doors();
+            setup_windows();
             paint_walls();
+
+            create_section_view();
 
             ExportToImage(floorView);
         }
 
+        public Result create_section_view_for_wall(Wall wall)
+        {
+            ViewFamilyType vft
+                 = new FilteredElementCollector(doc)
+                   .OfClass(typeof(ViewFamilyType))
+                   .Cast<ViewFamilyType>()
+                   .FirstOrDefault<ViewFamilyType>(x =>
+                     ViewFamily.Section == x.ViewFamily);
+
+            // Determine section box
+
+            LocationCurve lc = wall.Location as LocationCurve;
+
+            Line line = lc.Curve as Line;
+
+            XYZ p = line.GetEndPoint(1);
+            XYZ q = line.GetEndPoint(0);
+            XYZ v = q - p;
+
+            BoundingBoxXYZ bb = wall.get_BoundingBox(null);
+            double minZ = bb.Min.Z;
+            double maxZ = bb.Max.Z;
+
+            double w = v.GetLength();
+            double d = wall.WallType.Width;
+            double offset = 1 * w;
+
+            XYZ min = new XYZ(-w, minZ - offset, -offset);
+            XYZ max = new XYZ(w, maxZ + offset, 0);
+
+            XYZ midpoint = p + 0.5 * v;
+            XYZ walldir = v.Normalize();
+            XYZ up = XYZ.BasisZ;
+            XYZ viewdir = walldir.CrossProduct(up);
+
+            Transform t = Transform.Identity;
+            t.Origin = midpoint;
+            t.BasisX = walldir;
+            t.BasisY = up;
+            t.BasisZ = viewdir;
+
+            BoundingBoxXYZ sectionBox = new BoundingBoxXYZ();
+            sectionBox.Transform = t;
+            sectionBox.Min = min;
+            sectionBox.Max = max;
+
+            // Create wall section view
+
+            using (Transaction tx = new Transaction(doc))
+            {
+                tx.Start("Create Wall Section View");
+
+                ViewSection.CreateSection(doc, vft.Id, sectionBox);
+
+                tx.Commit();
+            }
+            return Result.Succeeded;
+        }
+
+        public Result create_section_view()
+        {
+            create_section_view_for_wall(ext_walls[0]);
+
+            return Result.Succeeded;
+
+        }
 
         public Result setup_level()
         {
@@ -125,6 +194,15 @@ namespace MyRevit
             };
 
             return insert_doors(doors_locations, level);
+        }
+
+        public Result setup_windows()
+        {
+            XYZ[] windows_locations = {
+                new XYZ(258 / 12.0, 377 / 12.0, (double) DoorOperations.Should_flip),  // Family 'Sliding_Window_6261', Type 'SW 0.6x1.2'
+            };
+
+            return insert_windows(windows_locations, level);
         }
 
         public void paint_walls(){

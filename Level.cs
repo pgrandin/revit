@@ -244,7 +244,7 @@ namespace MyRevit
                     Family tf = null;
                     //Choose appropriate path
                     // string tfamilyPath = @"C:\Users\John\Documents\owncloud\revit\Families\11x8 title block.rfa";
-                    string tfamilyPath = @"C:\ProgramData\Autodesk\RVT 2019\Libraries\US Imperial\Titleblocks\A 8.5 x 11 Vertical.rfa";
+                    string tfamilyPath = @"C:\ProgramData\Autodesk\RVT 2023\Libraries\English-Imperial\Titleblocks\A 8.5 x 11 Vertical.rfa";
                     doc.LoadFamily(tfamilyPath, out tf);
 
                     // Get the available title block from document
@@ -281,7 +281,7 @@ namespace MyRevit
 
         public static List<XYZ[]> get_walls_from_file(Level level, string type)
         {
-            string jsonFilePath = @"C:\Users\John\AppData\Roaming\Autodesk\Revit\Addins\2019\data.json";
+            string jsonFilePath = @"C:\Users\Admin\AppData\Roaming\Autodesk\Revit\Addins\2023\data.json";
 
             List<mylevels> items;
             List<XYZ[]> coords = new List<XYZ[]>();
@@ -330,7 +330,8 @@ namespace MyRevit
                 trans.Start("Exterior walls");
 
                 SketchPlane sketch = SketchPlane.Create(doc, level.Id);
-                CurveArray floor_profile = new CurveArray();    // profile for the floor
+                CurveLoop floor_loop = new CurveLoop();
+                
                 trans.Commit();
 
                 foreach (XYZ[] p in coords)
@@ -339,7 +340,7 @@ namespace MyRevit
                     trans.Start("Exterior walls");
                     line = Line.CreateBound(p[0], p[1]);
 
-                    floor_profile.Append(line);
+                    floor_loop.Append(line);
 
                     joistCurves.Add(Line.CreateBound(
                         new XYZ(p[0].X, p[0].Y, level_above.Elevation - joist_offset),
@@ -364,6 +365,7 @@ namespace MyRevit
                     }
                     trans.Commit();
 
+                    // Currently wall sweeps only attach to the exterior side
                     // add_wall_sweep(wall);
 
                     ext_walls.Add(wall);
@@ -374,7 +376,11 @@ namespace MyRevit
                 {
                     trans.Start("Exterior walls");
                     XYZ normal = XYZ.BasisZ;
-                    floor = doc.Create.NewFloor(floor_profile, floorType, level, true, normal);
+
+                    // create a new floor using the profile
+                    floor = Floor.Create(doc, new List<CurveLoop> {floor_loop}, floorType.Id, level.Id);                  
+                    
+                   
                     trans.Commit();
                 }
             }
@@ -409,19 +415,20 @@ namespace MyRevit
             using (trans = new Transaction(doc))
             {
                 trans.Start("floor");
-                CurveArray floor_profile = new CurveArray();
+                CurveLoop floor_loop = new CurveLoop();
+                
                 foreach (XYZ[] p in coords)
                 {
                     Line line;
 
                     line = Line.CreateBound(p[0], p[1]);
 
-                    floor_profile.Append(line);
+                    floor_loop.Append(line);
 
                 }
 
                 XYZ normal = XYZ.BasisZ;
-                floor = doc.Create.NewFloor(floor_profile, floorType, level, true, normal);
+                floor = Floor.Create(doc, new List<CurveLoop> { floor_loop }, floorType.Id, level.Id);
                 trans.Commit();
             }
             return Result.Succeeded;
@@ -480,7 +487,7 @@ namespace MyRevit
                     }
                     trans.Commit();
 
-                    // add_wall_sweep(wall);
+                    add_wall_sweep(wall);
 
                     int_walls.Add(wall);
                 }
@@ -570,7 +577,7 @@ namespace MyRevit
             FamilySymbol wfs = new FilteredElementCollector(doc)
                 .OfClass(typeof(FamilySymbol))
                 .Cast<FamilySymbol>().FirstOrDefault(q
-                => q.Name == "48\" x 60\"");
+                => q.Name == "SW 0.6x1.2");
 
 
             using (Transaction t = new Transaction(doc))
@@ -607,6 +614,8 @@ namespace MyRevit
                         }
                         t.Commit();
                     }
+                } else {
+                    TaskDialog.Show("Error", "Could not find a wall to host the window");
                 }
             }
 

@@ -21,6 +21,7 @@ namespace MyRevit
             setup_inside_walls();
             // setup_joists();
             setup_doors();
+            setup_windows();
             CreateRoomAndSeperators();
             create_wall_openings();
             paint_walls();
@@ -158,7 +159,7 @@ namespace MyRevit
                 t.Start();
                 Family f = null;
                 //FIXME : move to a function that's called only once
-                string familyPath = @"C:\ProgramData\Autodesk\RVT 2019\Libraries\US Imperial\Structural Framing\Wood\Plywood Web Joist.rfa";
+                string familyPath = @"C:\ProgramData\Autodesk\RVT 2023\Libraries\US Imperial\Structural Framing\Wood\Plywood Web Joist.rfa";
                 doc.LoadFamily(familyPath, out f);
 
                 XYZ pt0 = XYZ.Zero;
@@ -192,6 +193,20 @@ namespace MyRevit
 
             return insert_doors(doors_locations, level);
         }
+
+        public Result setup_windows()
+        {
+            XYZ[] windows_locations = {
+                new XYZ(420 / 12.0, 302.5 / 12.0, (double) DoorOperations.Should_flip),  // Family 'Sliding_Window_6261', Type 'SW 0.6x1.2'
+                new XYZ(252 / 12.0, 396 / 12.0, (double) DoorOperations.Should_flip),  // Family : Fixed, Type : '36" x 48"'
+                new XYZ(0 / 12.0, 60 / 12.0, (double) DoorOperations.Should_flip),
+                new XYZ(399 / 12.0, -19 / 12.0, (double) DoorOperations.Should_flip),
+
+                // Small windows : Family 'Window-Double-Hung', Type '24" x 42"'
+            };
+
+            return insert_windows(windows_locations, level);
+        }        
 
         public void CreateRoomAndSeperators()
         {

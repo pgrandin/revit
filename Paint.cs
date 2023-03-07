@@ -42,8 +42,9 @@ namespace MyRevit
                     using (AppearanceAssetEditScope editScope = new AppearanceAssetEditScope(doc))
                     {
                         Asset editableAsset = editScope.Start(assetElem2.Id);
-                        AssetPropertyDoubleArray4d genericDiffuseProperty = editableAsset["generic_diffuse"] as AssetPropertyDoubleArray4d;
-                        genericDiffuseProperty.SetValueAsColor(material.Color);
+                        // change the 'generic_diffuse' property to the paint color
+                        AssetPropertyDoubleArray4d genericDiffuseProperty = editableAsset.FindByName("generic_diffuse") as AssetPropertyDoubleArray4d;
+                        genericDiffuseProperty.SetValueAsColor(paint.Color);
                         editScope.Commit(true);
                     }
 

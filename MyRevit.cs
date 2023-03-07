@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Autodesk.Revit.Attributes;
@@ -12,6 +13,8 @@ namespace MyRevit
 
     public class Class1 : IExternalCommand
     {
+
+        IList<Paint> paints = new List<Paint>();
 
         public void setup_elevation_markers(Document doc)
         {
@@ -50,34 +53,37 @@ namespace MyRevit
 
         }
 
+        public Result load_families(Document doc)
+        {
+            Transaction trans = new Transaction(doc);
+            // 
+            using (trans = new Transaction(doc))
+            {
+
+                trans.Start("Families");
+
+                Family tf = null;
+
+                string mydocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                string tfamilyPath = mydocs + @"\revit\Families\Sliding_Window_6261.rfa";
+
+                doc.LoadFamily(tfamilyPath, out tf);
+
+                tfamilyPath = mydocs + @"\revit\Families\siding-profile.rfa";
+                doc.LoadFamily(tfamilyPath, out tf);
+
+                trans.Commit();
+            }
+            return Result.Succeeded;
+        }
+
+
         public Result setup_levels(Document doc)
         {
             Transaction trans = new Transaction(doc);
             FilteredElementCollector levels_col
               = new FilteredElementCollector(doc)
                 .OfClass(typeof(Level));
-
-            /*
-            Level[] levels = new Level[5];
-            foreach (Level lvl_ in levels_col)
-            {
-                if (lvl_.Name == "Level 1")
-                {
-                    levels[1] = lvl_;
-                }
-                if (lvl_.Name == "Level 2")
-                {
-                    levels[2] = lvl_;
-                }
-                if (lvl_.Name == "Basement")
-                {
-                    levels[0] = lvl_;
-                }
-            }
-            */
-
-            // FIXME : delete Floor plans/Level 1
-
 
             using (Transaction t = new Transaction(doc))
             {
@@ -89,8 +95,6 @@ namespace MyRevit
             FilteredElementCollector floorplans
               = new FilteredElementCollector(doc)
                 .OfClass(typeof(ViewPlan));
-
-
 
             List<ViewPlan> ViewPlans = floorplans.Cast<ViewPlan>().ToList();
 
@@ -154,6 +158,14 @@ namespace MyRevit
                 trans.Commit();
             }
             return Result.Succeeded;
+        }
+
+        private FamilySymbol GetProfile(Document doc, string name)
+        {
+            FilteredElementCollector profiles = new FilteredElementCollector(doc);
+            profiles.OfCategory(BuiltInCategory.OST_ProfileFamilies);
+            var MaterialElement = from element in profiles where element.Name == name select element;
+            return MaterialElement.First<Element>() as FamilySymbol;
         }
 
         public Result setup_wall_struct(Document doc)
@@ -294,13 +306,14 @@ namespace MyRevit
                 layers.Add(l2);
                 layers.Add(l1);
                 layers.Add(l2);
+                
                 structure.SetLayers(layers);
 
                 structure.DeleteLayer(0);
                 structure.SetNumberOfShellLayers(ShellLayerType.Exterior, 1);
                 structure.SetNumberOfShellLayers(ShellLayerType.Interior, 1);
 
-
+                /*
                 ElementType wallSweepType = new FilteredElementCollector(doc)
                     .OfCategory(BuiltInCategory.OST_Cornices)
                     .WhereElementIsElementType()
@@ -312,9 +325,37 @@ namespace MyRevit
                     wallSweepInfo.Distance = 2;
 
                     List<WallSweepInfo> ModSW = new List<WallSweepInfo>();
+                    // Use wallsweepInfo.wallside ?
+                    // Does not work:
                     // structure.AddWallSweep(wallSweepInfo);
+                    // Autodesk.Revit.Exceptions.ArgumentException: 'The wall sweep info does not represent a fixed wall sweep.  Only fixed wall sweeps may be assigned to vertical compound structures.
+                }
+                */
+
+                ElementId sweepElementId = GetProfile(doc, "siding-profile").Id;
+                if (sweepElementId == null)
+                {
+                    TaskDialog.Show("Error", "Could not find the siding-profile profile");
+                    return Result.Failed;
                 }
 
+                WallSweep sweep = doc.GetElement(sweepElementId) as WallSweep;
+
+                // Add a new wall sweep
+                WallSweepInfo wallSweepInfo = new WallSweepInfo(true, WallSweepType.Sweep);
+                wallSweepInfo.ProfileId = sweepElementId;
+                wallSweepInfo.IsCutByInserts = true;
+
+                Paint paint = this.paints.Where(p => p.Name == "SW1015").First();
+
+                for (int i = 0; i < 20; i++)
+                {
+                    wallSweepInfo.Distance = 6 * i / 12.0;
+                    wallSweepInfo.Id = i + 1;
+                    wallSweepInfo.MaterialId = paint.Material.Id;
+
+                    structure.AddWallSweep(wallSweepInfo);
+                }
 
                 newWallType.SetCompoundStructure(structure);
 
@@ -327,13 +368,10 @@ namespace MyRevit
         public Result setup_units(Document doc)
         {
             Units units_doc = doc.GetUnits();
-
-            UnitType ut = UnitType.UT_Length;
-            FormatOptions ft_doc = units_doc.GetFormatOptions(ut);
             FormatOptions nFt = new FormatOptions();
             nFt.UseDefault = false;
-            nFt.DisplayUnits = DisplayUnitType.DUT_FRACTIONAL_INCHES;
-            units_doc.SetFormatOptions(ut, nFt);
+            nFt.SetUnitTypeId(UnitTypeId.FractionalInches);
+            units_doc.SetFormatOptions(SpecTypeId.Length, nFt);
 
             Transaction trans;
             using (trans = new Transaction(doc))
@@ -342,7 +380,7 @@ namespace MyRevit
                 doc.SetUnits(units_doc);
                 trans.Commit();
             }
-
+            
             return Result.Succeeded;
         }
 
@@ -374,23 +412,26 @@ namespace MyRevit
 
             uiapp.ActiveUIDocument.RequestViewChange(site);
 
-            IList<Paint> paints = new List<Paint>(); 
+            
 
-            paints.Add(new Paint("SW7050", new Color(207, 202, 189))); // Useful Gray
-            paints.Add(new Paint("SW6840", new Color(181,  77, 127))); // Exuberant Pink
-            paints.Add(new Paint("SW7009", new Color(232, 227, 217))); // Pearly White
+            this.paints.Add(new Paint("SW7050", new Color(207, 202, 189))); // Useful Gray
+            this.paints.Add(new Paint("SW6840", new Color(181,  77, 127))); // Exuberant Pink
+            this.paints.Add(new Paint("SW7009", new Color(232, 227, 217))); // Pearly White
 
-            Paint.setup_paints(doc, paints);
+            this.paints.Add(new Paint("SW1015", new Color(198, 191, 179))); // Skyline Steel (exterior)
+
+            Paint.setup_paints(doc, this.paints);
 
             setup_units(doc);
             setup_elevation_markers(doc);
             setup_levels(doc);
+            load_families(doc);
             setup_wall_struct(doc);
 
             // var b = new Basement(uiapp);
             // b.setup();
-            var l1 = new Level1(uiapp, paints);
-            var l2 = new Level2(uiapp, paints);
+            var l1 = new Level1(uiapp, this.paints);
+            var l2 = new Level2(uiapp, this.paints);
             // var g = new Garage(doc);
             // g.setup();
             // var r = new Roof(doc);

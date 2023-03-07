@@ -112,7 +112,7 @@ namespace MyRevit
                 t.Start();
                 Family f = null;
                 //FIXME : move to a function that's called only once
-                string familyPath = @"C:\ProgramData\Autodesk\RVT 2019\Libraries\US Imperial\Structural Framing\Wood\Plywood Web Joist.rfa";
+                string familyPath = @"C:\ProgramData\Autodesk\RVT 2023\Libraries\US Imperial\Structural Framing\Wood\Plywood Web Joist.rfa";
                 doc.LoadFamily(familyPath, out f);
 
                 XYZ pt0 = XYZ.Zero;
