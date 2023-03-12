@@ -29,7 +29,7 @@ namespace MyRevit
             ExportToImage(floorView);
         }
 
-        public Result create_section_view_for_wall(Wall wall)
+        public Result create_section_view_for_wall(Wall wall, bool reverse_direction = false)
         {
             ViewFamilyType vft
                  = new FilteredElementCollector(doc)
@@ -44,8 +44,12 @@ namespace MyRevit
 
             Line line = lc.Curve as Line;
 
-            XYZ p = line.GetEndPoint(1);
-            XYZ q = line.GetEndPoint(0);
+            if (reverse_direction)
+            {
+                line = Line.CreateBound(line.GetEndPoint(1), line.GetEndPoint(0));
+            }
+            XYZ p = line.GetEndPoint(0);
+            XYZ q = line.GetEndPoint(1);
             XYZ v = q - p;
 
             BoundingBoxXYZ bb = wall.get_BoundingBox(null);
@@ -54,12 +58,17 @@ namespace MyRevit
 
             double w = v.GetLength();
             double d = wall.WallType.Width;
-            double offset = 1 * w;
+            double offset = 0.1 * w;
 
-            XYZ min = new XYZ(-w, minZ - offset, -offset);
-            XYZ max = new XYZ(w, maxZ + offset, 0);
+            double wallBaseOffset = wall.get_Parameter(BuiltInParameter.WALL_BASE_OFFSET).AsDouble();
+            double wallUnconnectedHeight = wall.get_Parameter(BuiltInParameter.WALL_USER_HEIGHT_PARAM).AsDouble();
+
+            XYZ min = new XYZ(-w, wallBaseOffset - offset, -offset * 0.5);
+            XYZ max = new XYZ(w, wallBaseOffset + wallUnconnectedHeight + offset, offset);
+
 
             XYZ midpoint = p + 0.5 * v;
+            
             XYZ walldir = v.Normalize();
             XYZ up = XYZ.BasisZ;
             XYZ viewdir = walldir.CrossProduct(up);
@@ -90,7 +99,7 @@ namespace MyRevit
 
         public Result create_section_view()
         {
-            create_section_view_for_wall(ext_walls[0]);
+            create_section_view_for_wall(ext_walls[0], true);
 
             return Result.Succeeded;
 
@@ -200,6 +209,7 @@ namespace MyRevit
         {
             XYZ[] windows_locations = {
                 new XYZ(258 / 12.0, 377 / 12.0, (double) DoorOperations.Should_flip),  // Family 'Sliding_Window_6261', Type 'SW 0.6x1.2'
+                new XYZ(418 / 12.0, 323 / 12.0, (double) DoorOperations.Should_flip),  // Family 'Sliding_Window_6261', Type 'SW 0.6x1.2'
             };
 
             return insert_windows(windows_locations, level);
@@ -223,7 +233,10 @@ namespace MyRevit
                 paint_wall(int_walls[i], ShellLayerType.Interior, "SW7050");
             }
 
-            int[] sw7050_ext = {10};
+            int[] sw7050_ext = {
+                12, 14, 16, //office 1
+                10
+            };
             foreach (int i in sw7050_ext){
                 paint_wall(int_walls[i], ShellLayerType.Exterior, "SW7050");
             }
@@ -233,7 +246,9 @@ namespace MyRevit
                 paint_wall(ext_walls[i], ShellLayerType.Interior, "SW7009");
             }
 
-            int[] sw7050_int2 = {};
+            int[] sw7050_int2 = {
+                0, // office 1
+            };
             foreach (int i in sw7050_int2){
                 paint_wall(ext_walls[i], ShellLayerType.Interior, "SW7050");
             }
