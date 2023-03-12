@@ -11,7 +11,7 @@ namespace MyRevit
     [Transaction(TransactionMode.Manual)]
     [Regeneration(RegenerationOption.Manual)]
 
-    public class Class1 : IExternalCommand
+    public class Build : IExternalCommand
     {
 
         IList<Paint> paints = new List<Paint>();
@@ -306,7 +306,7 @@ namespace MyRevit
                 layers.Add(l2);
                 layers.Add(l1);
                 layers.Add(l2);
-                
+
                 structure.SetLayers(layers);
 
                 structure.DeleteLayer(0);
@@ -380,12 +380,13 @@ namespace MyRevit
                 doc.SetUnits(units_doc);
                 trans.Commit();
             }
-            
+
             return Result.Succeeded;
         }
 
 
-        public Result create_schedule(Document doc){
+        public Result create_schedule(Document doc)
+        {
             Transaction trans = new Transaction(doc, "Create schedule");
             trans.Start();
             ViewSchedule vs = ViewSchedule.CreateSchedule(doc, new ElementId(BuiltInCategory.OST_Walls), new ElementId(BuiltInCategory.OST_Walls));
@@ -412,10 +413,8 @@ namespace MyRevit
 
             uiapp.ActiveUIDocument.RequestViewChange(site);
 
-            
-
             this.paints.Add(new Paint("SW7050", new Color(207, 202, 189))); // Useful Gray
-            this.paints.Add(new Paint("SW6840", new Color(181,  77, 127))); // Exuberant Pink
+            this.paints.Add(new Paint("SW6840", new Color(181, 77, 127))); // Exuberant Pink
             this.paints.Add(new Paint("SW7009", new Color(232, 227, 217))); // Pearly White
 
             this.paints.Add(new Paint("SW1015", new Color(198, 191, 179))); // Skyline Steel (exterior)
@@ -444,4 +443,5 @@ namespace MyRevit
             return Result.Succeeded;
         }
     }
+
 }
