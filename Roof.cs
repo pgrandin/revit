@@ -36,8 +36,8 @@ namespace MyRevit
 
             Transaction trans = new Transaction(doc);
 
-
-            string jsonFilePath = @"C:\Users\Admin\AppData\Roaming\Autodesk\Revit\Addins\2023\data.json";
+            string mydocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string jsonFilePath = mydocs + @"\revit\code\revit\data.json";
 
             List<mylevels> items;
             List<XYZ[]> coords = new List<XYZ[]>();
