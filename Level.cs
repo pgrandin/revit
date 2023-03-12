@@ -242,8 +242,6 @@ namespace MyRevit
                     trans.Start("Sheet");
 
                     Family tf = null;
-                    //Choose appropriate path
-                    // string tfamilyPath = @"C:\Users\John\Documents\owncloud\revit\Families\11x8 title block.rfa";
                     string tfamilyPath = @"C:\ProgramData\Autodesk\RVT 2023\Libraries\English-Imperial\Titleblocks\A 8.5 x 11 Vertical.rfa";
                     doc.LoadFamily(tfamilyPath, out tf);
 
@@ -281,7 +279,8 @@ namespace MyRevit
 
         public static List<XYZ[]> get_walls_from_file(Level level, string type)
         {
-            string jsonFilePath = @"C:\Users\Admin\AppData\Roaming\Autodesk\Revit\Addins\2023\data.json";
+            string mydocs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string jsonFilePath = mydocs + @"\revit\code\revit\data.json";
 
             List<mylevels> items;
             List<XYZ[]> coords = new List<XYZ[]>();
